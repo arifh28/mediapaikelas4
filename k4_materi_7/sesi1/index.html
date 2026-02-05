@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MPI: Sifat Rasul</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #0ea5e9; 
+            --dark-blue: #0284c7;
+            --accent-yellow: #facc15;
+            --soft-bg: #f0f9ff;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--soft-bg);
+            margin: 0;
+            overflow: hidden; 
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #f8fafc;
+        }
+
+        /* --- GLOBAL BUTTONS (FULLSCREEN & NAV) --- */
+        .btn-float {
+            position: fixed;
+            top: 20px;
+            z-index: 2000; /* Paling atas */
+            border-radius: 50px;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            cursor: pointer;
+        }
+
+        /* Tombol Fullscreen (Paling Kiri) */
+        #btn-fullscreen {
+            left: 20px;
+            width: 45px;
+            height: 45px;
+            background: var(--dark-blue);
+            color: white;
+        }
+        #btn-fullscreen:hover { background: var(--accent-yellow); color: black; }
+
+        /* Tombol Home (Sebelah Kanan Fullscreen) */
+        .btn-back-home {
+            left: 80px; /* Digeser agar tidak numpuk */
+            background: white;
+            color: var(--dark-blue);
+            padding: 8px 20px;
+            text-decoration: none;
+            border: 2px solid var(--primary-blue);
+        }
+        .btn-back-home:hover { background: var(--primary-blue); color: white; }
+
+        /* --- LOGIKA TAMPILAN HALAMAN --- */
+        .content-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none !important;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+            padding: 20px;
+            overflow-y: auto; 
+            background-size: cover !important;
+            background-position: center !important;
+        }
+
+        .content-section.active {
+            display: block !important;
+            opacity: 1;
+            z-index: 10;
+        }
+
+        #home.active {
+            display: flex !important;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- BACKGROUND IMAGES --- */
+        #home { background: url('assets/images/bg-home.png') no-repeat, linear-gradient(135deg, #e0f2fe, #fef9c3); }
+        #materi { background: url('assets/images/bg-materi.png') no-repeat, #f1f5f9; }
+        #game { background: url('assets/images/bg-game.png') no-repeat, #f0f9ff; }
+        #asesmen { background: url('assets/images/bg-asesmen.jpg') no-repeat, #f8fafc; }
+        #tujuan { background: url('assets/images/bg-home.png') no-repeat, linear-gradient(135deg, #fef9c3, #e0f2fe); }
+
+        /* --- GLASS PANEL CONTAINER --- */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 30px;
+            margin-top: 70px; /* Adjusted for top buttons */
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            min-height: calc(100vh - 120px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HOME MENU --- */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .menu-card {
+            border: none;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white !important;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .menu-card:hover { transform: scale(1.03); box-shadow: 0 15px 25px rgba(0,0,0,0.2); }
+        .menu-card i { font-size: 2.5rem; margin-bottom: 10px; display: block; }
+        .menu-card h3 { font-size: 1.4rem; font-weight: 800; margin: 0; }
+
+        .btn-tujuan { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+        .btn-materi { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .btn-game { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn-asesmen { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+        /* --- MATERI SLIDES CUSTOM STYLE --- */
+        .slide-container {
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .materi-slide {
+            animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .concept-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 6px solid var(--accent-yellow);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        .narrative-box {
+            background-color: var(--soft-bg);
+            border-radius: 10px;
+            padding: 15px;
+            font-style: italic;
+            border: 1px dashed var(--primary-blue);
+            margin-top: 10px;
+        }
+
+        /* --- GAME STYLES --- */
+        .draggable-item {
+            background-color: var(--accent-yellow);
+            color: var(--dark-blue);
+            padding: 12px 20px;
+            margin: 8px;
+            border-radius: 50px;
+            font-weight: 800;
+            cursor: grab;
+            display: inline-block;
+            touch-action: none; 
+            user-select: none;
+            box-shadow: 0 4px 5px rgba(0,0,0,0.2);
+            position: relative; 
+            z-index: 100;
+            font-size: 1.2rem;
+        }
+        .drop-zone {
+            min-height: 250px;
+            border: 3px dashed var(--primary-blue);
+            border-radius: 15px;
+            background: rgba(224, 242, 254, 0.5);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- QUIZ STYLES (COLORFUL) --- */
+        .quiz-option {
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quiz-option:hover {
+            transform: translateX(10px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Pilihan A (Kuning) */
+        .quiz-option:nth-child(1) {
+            background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+            color: #422006; /* Dark Brown Text */
+        }
+        /* Pilihan B (Biru) */
+        .quiz-option:nth-child(2) {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        /* Pilihan C (Orange) */
+        .quiz-option:nth-child(3) {
+            background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+            color: white;
+        }
+        /* Pilihan D (Merah) */
+        .quiz-option:nth-child(4) {
+            background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+            color: white;
+        }
+
+        /* Feedback Colors (Menggunakan !important agar menimpa warna gradasi di atas) */
+        .quiz-option.correct {
+            background: #22c55e !important; /* Green */
+            color: white !important;
+            border: 3px solid #14532d !important;
+        }
+        .quiz-option.wrong {
+            background: #7f1d1d !important; /* Dark Red */
+            color: white !important;
+            opacity: 0.8;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="btn-fullscreen" class="btn-float" onclick="toggleFullscreen()" title="Fullscreen">
+    <i class="fas fa-expand"></i>
+</div>
+
+<div class="app-container">
+
+    <div id="home" class="content-section active">
+        <div class="text-center mb-5">
+            <h1 class="display-3 fw-bold text-primary" style="text-shadow: 2px 2px 0 white;">SIFAT RASUL</h1>
+            <span class="badge bg-warning text-dark fs-4 px-4 py-2 rounded-pill shadow-sm">Media Pembelajaran Interaktif PAI Kelas 4</span>
+        </div>
+
+        <div class="menu-grid">
+            <div class="menu-card btn-tujuan" onclick="goToMenu('tujuan')">
+                <i class="fas fa-bullseye"></i>
+                <h3>Tujuan</h3>
+            </div>
+            <div class="menu-card btn-materi" onclick="goToMenu('materi')">
+                <i class="fas fa-book-open"></i>
+                <h3>Materi</h3>
+            </div>
+            <div class="menu-card btn-game" onclick="goToMenu('game')">
+                <i class="fas fa-gamepad"></i>
+                <h3>Game</h3>
+            </div>
+            <div class="menu-card btn-asesmen" onclick="goToMenu('asesmen')">
+                <i class="fas fa-clipboard-check"></i>
+                <h3>Asesmen</h3>
+            </div>
+        </div>
+    </div>
+
+    <div id="tujuan" class="content-section">
+        <button class="btn-float btn-back-home" onclick="goToMenu('home')"><i class="fas fa-arrow-left me-2"></i>Home</button>
+        <div class="container h-100">
+            <div class="glass-panel justify-content-center">
+                <h2 class="text-center text-primary fw-bold mb-5 display-5"><i class="fas fa-bullseye me-2"></i>Tujuan Pembelajaran</h2>
+                <div class="row justify-content-center">
+                    <div class="col-md-10">
+                        <div class="list-group list-group-flush fs-4">
+                            <div class="list-group-item bg-transparent py-3"><i class="fas fa-check-circle text-success me-3"></i> Siswa dapat menyebutkan 4 sifat wajib bagi Rasul.</div>
+                            <div class="list-group-item bg-transparent py-3"><i class="fas fa-check-circle text-success me-3"></i> Siswa dapat menyebutkan 4 sifat mustahil bagi Rasul.</div>
+                            <div class="list-group-item bg-transparent py-3"><i class="fas fa-check-circle text-success me-3"></i> Siswa memahami perbedaan dan makna masing-masing sifat.</div>
+                            <div class="list-group-item bg-transparent py-3"><i class="fas fa-check-circle text-success me-3"></i> Siswa dapat meneladani kejujuran dan kecerdasan Rasul.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="materi" class="content-section">
+        <button class="btn-float btn-back-home" onclick="goToMenu('home')"><i class="fas fa-arrow-left me-2"></i>Home</button>
+        <div class="container h-100">
+            <div class="glass-panel">
+                
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <h3 class="fw-bold text-primary m-0">Materi Pembelajaran</h3>
+                    <span class="badge bg-secondary fs-6">Slide <span id="slide-number">1</span> / 8</span>
+                </div>
+
+                <div class="slide-container position-relative">
+                    
+                    <div id="mat-slide-1" class="materi-slide text-center">
+                        <div class="py-5">
+                            <i class="fas fa-question-circle text-warning display-1 mb-4"></i>
+                            <h2 class="fw-bold text-dark mb-4">Pertanyaan Pemantik</h2>
+                            <div class="alert alert-info d-inline-block text-start p-4 shadow-sm" style="max-width: 700px; border-radius: 20px;">
+                                <h3 class="fw-bold mb-3">"Siapa Idola Kalian?"</h3>
+                                <p class="fs-4">Bayangkan jika idola kalian ternyata suka berbohong kepada penggemarnya. Apakah kalian akan tetap menyukainya?</p>
+                                <hr>
+                                <p class="fs-5 mb-0">Seorang pemimpin umat (Rasul) haruslah sosok yang sempurna dan tidak mungkin mengecewakan. Mari kita pelajari sifat-sifatnya!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="mat-slide-2" class="materi-slide d-none text-center">
+                        <h3 class="fw-bold mb-4 text-primary">Mari Bernyanyi Bersama</h3>
+                        <div class="ratio ratio-16x9 shadow-lg rounded-4 mx-auto" style="max-width: 800px;">
+                            <iframe 
+								src="https://www.youtube.com/embed/DRpMhFKgBnE" 
+								title="Video Pembelajaran" 
+								allowfullscreen>
+							</iframe>
+                        </div>
+                        <p class="mt-3 text-muted fst-italic">Tonton video ini untuk memahami Sifat Wajib dan Sifat Mustahil bagi Rasul.</p>
+                    </div>
+
+                    <div id="mat-slide-3" class="materi-slide d-none">
+                        <h3 class="text-center fw-bold text-primary mb-4">Sifat Wajib Bagian 1</h3>
+                        <div class="row g-4 align-items-stretch">
+                            <div class="col-md-6">
+                                <div class="concept-card">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary text-white rounded-circle p-3 me-3"><i class="fas fa-check fa-2x"></i></div>
+                                        <h2 class="fw-bold m-0">1. Siddiq</h2>
+                                    </div>
+                                    <p class="fs-5">Artinya: <strong>Benar / Jujur</strong>.</p>
+                                    <p>Rasul selalu berkata benar, baik dalam menyampaikan wahyu maupun perkataan sehari-hari.</p>
+                                    <div class="narrative-box">
+                                        <small class="fw-bold text-primary">Kisah Singkat:</small><br>
+                                        Bahkan sebelum menjadi Nabi, Muhammad SAW sudah dijuluki penduduk Mekkah sebagai orang yang paling jujur dalam berdagang.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="concept-card">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary text-white rounded-circle p-3 me-3"><i class="fas fa-brain fa-2x"></i></div>
+                                        <h2 class="fw-bold m-0">2. Fathonah</h2>
+                                    </div>
+                                    <p class="fs-5">Artinya: <strong>Cerdas</strong>.</p>
+                                    <p>Rasul memiliki kecerdasan tinggi untuk menyelesaikan masalah umat dan berdakwah.</p>
+                                    <div class="narrative-box">
+                                        <small class="fw-bold text-primary">Kisah Singkat:</small><br>
+                                        Nabi Muhammad dengan cerdas memindahkan Hajar Aswad menggunakan kain sorban agar semua kepala suku merasa adil.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="mat-slide-4" class="materi-slide d-none">
+                        <h3 class="text-center fw-bold text-primary mb-4">Sifat Wajib Bagian 2</h3>
+                        <div class="row g-4 align-items-stretch">
+                            <div class="col-md-6">
+                                <div class="concept-card">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary text-white rounded-circle p-3 me-3"><i class="fas fa-hand-holding-heart fa-2x"></i></div>
+                                        <h2 class="fw-bold m-0">3. Amanah</h2>
+                                    </div>
+                                    <p class="fs-5">Artinya: <strong>Dapat Dipercaya</strong>.</p>
+                                    <p>Segala ucapan dan tingkah laku Rasul dapat dipercaya. Beliau tidak akan berkhianat.</p>
+                                    <div class="narrative-box">
+                                        <small class="fw-bold text-primary">Kisah Singkat:</small><br>
+                                        Gelar <em>Al-Amin</em> (Dapat Dipercaya) diberikan karena beliau selalu menjaga barang titipan penduduk Mekkah dengan baik.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="concept-card">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary text-white rounded-circle p-3 me-3"><i class="fas fa-bullhorn fa-2x"></i></div>
+                                        <h2 class="fw-bold m-0">4. Tabligh</h2>
+                                    </div>
+                                    <p class="fs-5">Artinya: <strong>Menyampaikan</strong>.</p>
+                                    <p>Rasul menyampaikan seluruh wahyu dari Allah SWT kepada umatnya tanpa disembunyikan.</p>
+                                    <div class="narrative-box">
+                                        <small class="fw-bold text-primary">Kisah Singkat:</small><br>
+                                        Meski diancam dan dimusuhi, Nabi tetap berani menyampaikan ajaran Islam secara terang-terangan.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="mat-slide-5" class="materi-slide d-none">
+                        <h3 class="text-center fw-bold text-danger mb-4">Sifat Mustahil Bagian 1</h3>
+                        <p class="text-center mb-4">Sifat Mustahil adalah sifat yang <strong>TIDAK MUNGKIN</strong> ada pada Rasul.</p>
+                        <div class="row g-4 align-items-stretch">
+                            <div class="col-md-6">
+                                <div class="concept-card" style="border-left-color: #ef4444;">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-danger text-white rounded-circle p-3 me-3"><i class="fas fa-times fa-2x"></i></div>
+                                        <div>
+                                            <h2 class="fw-bold m-0 text-danger">1. Kidzib</h2>
+                                            <small class="text-muted">Lawan dari Siddiq</small>
+                                        </div>
+                                    </div>
+                                    <p class="fs-5">Artinya: <strong>Berdusta / Bohong</strong>.</p>
+                                    <p>Mustahil Rasul itu pembohong. Jika Rasul berbohong, maka hancurlah kepercayaan umat dan agama.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="concept-card" style="border-left-color: #ef4444;">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-danger text-white rounded-circle p-3 me-3"><i class="fas fa-times fa-2x"></i></div>
+                                        <div>
+                                            <h2 class="fw-bold m-0 text-danger">2. Baladah</h2>
+                                            <small class="text-muted">Lawan dari Fathonah</small>
+                                        </div>
+                                    </div>
+                                    <p class="fs-5">Artinya: <strong>Bodoh</strong>.</p>
+                                    <p>Mustahil Rasul itu bodoh. Seorang pemimpin umat yang membawa hukum Allah haruslah orang yang sangat cerdas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="mat-slide-6" class="materi-slide d-none">
+                        <h3 class="text-center fw-bold text-danger mb-4">Sifat Mustahil Bagian 2</h3>
+                        <div class="row g-4 align-items-stretch">
+                            <div class="col-md-6">
+                                <div class="concept-card" style="border-left-color: #ef4444;">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-danger text-white rounded-circle p-3 me-3"><i class="fas fa-times fa-2x"></i></div>
+                                        <div>
+                                            <h2 class="fw-bold m-0 text-danger">3. Khianat</h2>
+                                            <small class="text-muted">Lawan dari Amanah</small>
+                                        </div>
+                                    </div>
+                                    <p class="fs-5">Artinya: <strong>Berkhianat / Ingkar Janji</strong>.</p>
+                                    <p>Mustahil Rasul berkhianat terhadap amanah yang diberikan Allah maupun titipan manusia.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="concept-card" style="border-left-color: #ef4444;">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-danger text-white rounded-circle p-3 me-3"><i class="fas fa-times fa-2x"></i></div>
+                                        <div>
+                                            <h2 class="fw-bold m-0 text-danger">4. Kitman</h2>
+                                            <small class="text-muted">Lawan dari Tabligh</small>
+                                        </div>
+                                    </div>
+                                    <p class="fs-5">Artinya: <strong>Menyembunyikan</strong>.</p>
+                                    <p>Mustahil Rasul menyembunyikan wahyu. Walaupun satu ayat, pasti disampaikan kepada umatnya.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="mat-slide-7" class="materi-slide d-none">
+                        <h3 class="text-center fw-bold text-primary mb-4">Kesimpulan</h3>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered shadow-sm fs-5 bg-white">
+                                <thead class="table-primary text-center">
+                                    <tr>
+                                        <th width="45%">SIFAT WAJIB (Harus Ada)</th>
+                                        <th width="10%"><i class="fas fa-arrows-alt-h"></i></th>
+                                        <th width="45%">SIFAT MUSTAHIL (Tidak Mungkin)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-center align-middle">
+                                    <tr>
+                                        <td class="text-success fw-bold">Siddiq (Jujur)</td>
+                                        <td>Lawan</td>
+                                        <td class="text-danger">Kidzib (Dusta)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-success fw-bold">Amanah (Terpercaya)</td>
+                                        <td>Lawan</td>
+                                        <td class="text-danger">Khianat (Ingkar)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-success fw-bold">Tabligh (Menyampaikan)</td>
+                                        <td>Lawan</td>
+                                        <td class="text-danger">Kitman (Menyembunyikan)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-success fw-bold">Fathonah (Cerdas)</td>
+                                        <td>Lawan</td>
+                                        <td class="text-danger">Baladah (Bodoh)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="mat-slide-8" class="materi-slide d-none text-center">
+                        <div class="py-4">
+                            <i class="fas fa-heart text-danger fa-4x mb-3"></i>
+                            <h2 class="fw-bold text-primary mb-4">Refleksi Pembelajaran</h2>
+                            <div class="card bg-white p-4 shadow-sm mx-auto" style="max-width: 600px; border-radius: 20px; border-top: 5px solid var(--primary-blue);">
+                                <h4 class="mb-3">Janji Diriku Hari Ini:</h4>
+                                <ul class="list-unstyled text-start fs-5">
+                                    <li class="mb-2"><i class="fas fa-check-square text-success me-2"></i> Aku akan selalu <strong>JUJUR</strong> walau sulit.</li>
+                                    <li class="mb-2"><i class="fas fa-check-square text-success me-2"></i> Aku akan <strong>RAJIN BELAJAR</strong> agar cerdas.</li>
+                                    <li class="mb-2"><i class="fas fa-check-square text-success me-2"></i> Aku akan <strong>MENJAGA TITIPAN</strong> teman.</li>
+                                    <li class="mb-2"><i class="fas fa-check-square text-success me-2"></i> Aku akan menyampaikan <strong>KEBENARAN</strong>.</li>
+                                </ul>
+                            </div>
+                            <p class="mt-4 fs-5 text-muted">"Meneladani sifat Rasul adalah kunci sukses dunia akhirat."</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="slide-nav-buttons d-flex justify-content-between pt-3 border-top mt-3">
+                    <button class="btn btn-outline-secondary btn-lg px-4 rounded-pill" id="btn-prev-materi" onclick="navigateMateri(-1)">
+                        <i class="fas fa-arrow-left me-2"></i> Sebelumnya
+                    </button>
+                    <button class="btn btn-primary btn-lg px-4 rounded-pill" id="btn-next-materi" onclick="navigateMateri(1)">
+                        Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="game" class="content-section">
+        <button class="btn-float btn-back-home" onclick="goToMenu('home')"><i class="fas fa-arrow-left me-2"></i>Home</button>
+        <div class="container h-100">
+            <div class="glass-panel">
+                <div class="text-center mb-2">
+                    <h2 class="text-primary fw-bold">Game Drag & Drop</h2>
+                    <p class="mb-2">Geser kotak kuning ke area yang benar!</p>
+                    <button class="btn btn-warning btn-sm rounded-pill px-3" onclick="initGame()"><i class="fas fa-sync me-1"></i> Reset</button>
+                </div>
+                
+                <div id="source-container" class="d-flex justify-content-center flex-wrap p-2 bg-white rounded shadow-sm mb-3" style="min-height: 80px; border: 2px solid #e2e8f0;"></div>
+
+                <div class="row g-3 h-100 pb-3">
+                    <div class="col-md-6">
+                        <div class="card border-primary h-100">
+                            <div class="card-header bg-primary text-white text-center fw-bold fs-5">SIFAT WAJIB</div>
+                            <div class="card-body bg-light p-2">
+                                <div id="target-wajib" class="drop-zone" data-category="wajib"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-danger h-100">
+                            <div class="card-header bg-danger text-white text-center fw-bold fs-5">SIFAT MUSTAHIL</div>
+                            <div class="card-body bg-light p-2">
+                                <div id="target-mustahil" class="drop-zone" data-category="mustahil"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="asesmen" class="content-section">
+        <button class="btn-float btn-back-home" onclick="goToMenu('home')"><i class="fas fa-arrow-left me-2"></i>Home</button>
+        <div class="container h-100 d-flex justify-content-center align-items-center">
+            <div class="glass-panel w-100" style="max-width: 900px; height: auto;">
+                <div class="d-flex justify-content-between mb-4 border-bottom pb-2">
+                    <h2 class="text-primary fw-bold">Kuis Pengetahuan</h2>
+                    <span class="badge bg-warning text-dark fs-5 align-self-center">Skor: <span id="score-display">0</span></span>
+                </div>
+
+                <div id="quiz-box">
+                    <h3 id="question-text" class="mb-4 fw-bold lh-base">Loading...</h3>
+                    <div id="options-box" class="d-grid gap-2"></div>
+                    <div class="mt-4 text-end">
+                        <button id="btn-next" class="btn btn-primary btn-lg px-5 rounded-pill" onclick="nextQuestion()" disabled>Lanjut <i class="fas fa-arrow-right ms-2"></i></button>
+                    </div>
+                </div>
+
+                <div id="result-box" class="text-center d-none py-5">
+                    <i class="fas fa-trophy text-warning fa-5x mb-3 animate__animated animate__bounce"></i>
+                    <h2>Kuis Selesai!</h2>
+                    <p class="fs-4 text-muted">Nilai kamu adalah:</p>
+                    <h1 class="display-1 fw-bold text-primary mb-4" id="final-score">0</h1>
+                    <button class="btn btn-outline-primary btn-lg rounded-pill px-5" onclick="startQuiz()">Main Lagi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<audio id="sfx-benar" src="assets/benar.mp3"></audio>
+<audio id="sfx-salah" src="assets/salah.mp3"></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // --- 1. LOGIKA FULLSCREEN ---
+    function toggleFullscreen() {
+        const elem = document.documentElement;
+        const btnIcon = document.querySelector('#btn-fullscreen i');
+        
+        if (!document.fullscreenElement) {
+            // Masuk Fullscreen
+            if (elem.requestFullscreen) { elem.requestFullscreen(); }
+            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } // Safari
+            else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); } // IE11
+            btnIcon.classList.remove('fa-expand');
+            btnIcon.classList.add('fa-compress');
+        } else {
+            // Keluar Fullscreen
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+            else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+            btnIcon.classList.remove('fa-compress');
+            btnIcon.classList.add('fa-expand');
+        }
+    }
+
+    // --- 2. LOGIKA NAVIGASI GLOBAL ---
+    function goToMenu(menuId) {
+        document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+        const target = document.getElementById(menuId);
+        if(target) {
+            target.classList.add('active');
+            if(menuId === 'materi') resetMateri(); 
+            if(menuId === 'game') initGame();
+            if(menuId === 'asesmen') startQuiz();
+        }
+    }
+
+    // --- 3. LOGIKA MATERI (SLIDESHOW) ---
+    let currentSlide = 1;
+    const totalSlides = 8;
+
+    function resetMateri() {
+        currentSlide = 1;
+        updateMateriView();
+    }
+
+    function navigateMateri(step) {
+        currentSlide += step;
+        if (currentSlide < 1) currentSlide = 1;
+        if (currentSlide > totalSlides) currentSlide = totalSlides;
+        updateMateriView();
+    }
+
+    function updateMateriView() {
+        document.querySelectorAll('.materi-slide').forEach(el => el.classList.add('d-none'));
+        document.getElementById(`mat-slide-${currentSlide}`).classList.remove('d-none');
+        document.getElementById('slide-number').innerText = currentSlide;
+        const btnPrev = document.getElementById('btn-prev-materi');
+        const btnNext = document.getElementById('btn-next-materi');
+
+        if(currentSlide === 1) btnPrev.disabled = true; else btnPrev.disabled = false;
+
+        if(currentSlide === totalSlides) {
+            btnNext.innerHTML = 'Selesai <i class="fas fa-check ms-2"></i>';
+            btnNext.classList.remove('btn-primary');
+            btnNext.classList.add('btn-success');
+            btnNext.onclick = () => goToMenu('home'); 
+        } else {
+            btnNext.innerHTML = 'Selanjutnya <i class="fas fa-arrow-right ms-2"></i>';
+            btnNext.classList.add('btn-primary');
+            btnNext.classList.remove('btn-success');
+            btnNext.onclick = () => navigateMateri(1);
+        }
+    }
+
+    // --- 4. AUDIO HELPER ---
+    function playAudio(type) {
+        const audio = document.getElementById(type === 'correct' ? 'sfx-benar' : 'sfx-salah');
+        if(audio) { audio.currentTime = 0; audio.play().catch(e => console.log(e)); }
+    }
+
+    // --- 5. GAME DRAG & DROP ---
+    const gameData = [
+        { text: "Siddiq", type: "wajib" }, { text: "Kidzib", type: "mustahil" },
+        { text: "Amanah", type: "wajib" }, { text: "Khianat", type: "mustahil" },
+        { text: "Tabligh", type: "wajib" }, { text: "Kitman", type: "mustahil" },
+        { text: "Fathonah", type: "wajib" }, { text: "Baladah", type: "mustahil" }
+    ];
+
+    function initGame() {
+        const source = document.getElementById('source-container');
+        document.getElementById('target-wajib').innerHTML = '';
+        document.getElementById('target-mustahil').innerHTML = '';
+        source.innerHTML = '';
+
+        [...gameData].sort(() => 0.5 - Math.random()).forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'draggable-item';
+            el.innerText = item.text;
+            el.dataset.type = item.type;
+            
+            el.addEventListener('touchstart', touchStart, {passive: false});
+            el.addEventListener('touchmove', touchMove, {passive: false});
+            el.addEventListener('touchend', touchEnd);
+            el.onmousedown = mouseStart; 
+
+            source.appendChild(el);
+        });
+    }
+
+    // Touch Logic
+    let activeDrag = null;
+    function touchStart(e) { activeDrag = e.target; activeDrag.style.position = 'fixed'; activeDrag.style.zIndex = '9999'; moveAt(e.touches[0].clientX, e.touches[0].clientY); }
+    function touchMove(e) { if(activeDrag) { e.preventDefault(); moveAt(e.touches[0].clientX, e.touches[0].clientY); } }
+    function touchEnd(e) { if(!activeDrag) return; activeDrag.style.display = 'none'; const elemBelow = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY); activeDrag.style.display = 'block'; checkDrop(activeDrag, elemBelow?.closest('.drop-zone')); activeDrag = null; }
+    function moveAt(x, y) { if(activeDrag) { activeDrag.style.left = x - activeDrag.offsetWidth/2 + 'px'; activeDrag.style.top = y - activeDrag.offsetHeight/2 + 'px'; } }
+    
+    // Mouse Logic
+    function mouseStart(e) { e.preventDefault(); activeDrag = e.target; activeDrag.style.position = 'fixed'; activeDrag.style.zIndex = '9999'; const onMove = (evt) => moveAt(evt.clientX, evt.clientY); document.addEventListener('mousemove', onMove); activeDrag.onmouseup = (evt) => { document.removeEventListener('mousemove', onMove); activeDrag.style.display = 'none'; const elemBelow = document.elementFromPoint(evt.clientX, evt.clientY); activeDrag.style.display = 'block'; checkDrop(activeDrag, elemBelow?.closest('.drop-zone')); activeDrag.onmouseup = null; activeDrag = null; }; }
+
+    function checkDrop(element, zone) {
+        if (zone && element.dataset.type === zone.dataset.category) {
+            playAudio('correct'); element.style.position = 'static'; element.style.backgroundColor = '#86efac'; element.style.cursor = 'default'; const clone = element.cloneNode(true); zone.appendChild(clone); element.remove();
+        } else {
+            playAudio('wrong'); element.style.position = 'static'; document.getElementById('source-container').appendChild(element);
+        }
+    }
+
+    // --- 6. LOGIKA KUIS (WARNA GRADASI) ---
+    const questions = [
+        { q: "Sifat 'Siddiq' artinya...", opts: ["Cerdas", "Jujur", "Menyampaikan", "Dipercaya"], ans: 1 },
+        { q: "Lawan dari Amanah adalah...", opts: ["Kidzib", "Baladah", "Khianat", "Kitman"], ans: 2 },
+        { q: "Sifat Mustahil 'Baladah' artinya...", opts: ["Bodoh", "Pintar", "Gila", "Berdusta"], ans: 0 },
+        { q: "Menyampaikan wahyu adalah sifat...", opts: ["Fathonah", "Siddiq", "Tabligh", "Amanah"], ans: 2 },
+        { q: "Kitman artinya...", opts: ["Berkhianat", "Berdusta", "Menyembunyikan", "Lupa"], ans: 2 },
+        { q: "Jumlah sifat Wajib Rasul adalah...", opts: ["3", "4", "5", "25"], ans: 1 },
+        { q: "Fathonah berarti...", opts: ["Kuat", "Kaya", "Cerdas", "Sabar"], ans: 2 },
+        { q: "Yang BUKAN sifat mustahil Rasul?", opts: ["Kidzib", "Siddiq", "Khianat", "Baladah"], ans: 1 },
+        { q: "Sifat Amanah berarti...", opts: ["Berdusta", "Menjaga titipan", "Pamer", "Malas"], ans: 1 },
+        { q: "Gelar Al-Amin Nabi Muhammad krn...", opts: ["Amanah", "Tabligh", "Fathonah", "Kitman"], ans: 0 },
+    ];
+    let qIndex=0, score=0;
+
+    function startQuiz() {
+        qIndex=0; score=0;
+        document.getElementById('score-display').innerText="0";
+        document.getElementById('result-box').classList.add('d-none');
+        document.getElementById('quiz-box').classList.remove('d-none');
+        loadQuestion();
+    }
+    function loadQuestion() {
+        const q = questions[qIndex];
+        document.getElementById('question-text').innerText = (qIndex+1)+". "+q.q;
+        const c = document.getElementById('options-box'); c.innerHTML='';
+        
+        // Pilihan Ganda A, B, C, D
+        const labels = ["A. ", "B. ", "C. ", "D. "];
+        q.opts.forEach((o,i)=>{
+            const b = document.createElement('div'); 
+            b.className='quiz-option'; 
+            b.innerText= labels[i] + o;
+            b.onclick=()=>selectAnswer(i,b); 
+            c.appendChild(b);
+        });
+        document.getElementById('btn-next').disabled=true;
+    }
+    function selectAnswer(i, el) {
+        document.querySelectorAll('.quiz-option').forEach(o=>o.style.pointerEvents='none');
+        const correct = questions[qIndex].ans;
+        if(i===correct) { 
+            el.classList.add('correct'); // Hijau
+            score+=10; 
+            playAudio('correct'); 
+        } else { 
+            el.classList.add('wrong'); // Merah Gelap
+            document.querySelectorAll('.quiz-option')[correct].classList.add('correct'); 
+            playAudio('wrong'); 
+        }
+        document.getElementById('score-display').innerText=score;
+        document.getElementById('btn-next').disabled=false;
+    }
+    function nextQuestion() {
+        if(++qIndex < questions.length) loadQuestion(); else {
+            document.getElementById('quiz-box').classList.add('d-none');
+            document.getElementById('result-box').classList.remove('d-none');
+            document.getElementById('final-score').innerText=score;
+        }
+    }
+</script>
+
+</body>
+</html>
