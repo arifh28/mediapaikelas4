@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPI Surat At-Tin - Kelas 4</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Amiri&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #2d6a4f;
+            --light-green: #95d5b2;
+            --accent-yellow: #ffdd00;
+            --soft-yellow: #fff9db;
+            --opt-a: #325f45;
+            --opt-b: #ffc107;
+            --opt-c: #6f42c1;
+            --opt-d: #007bff;
+            --wrong-red: #dc3545;
+        }
+
+        body { font-family: 'Oswald', sans-serif; overflow-x: hidden; margin: 0; background-color: #f8f9fa; }
+        
+        /* Background Screens */
+        .screen { 
+            display: none; 
+            min-height: 100vh; 
+            padding: 80px 20px 40px 20px; 
+            background-size: cover; 
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .active-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        #home-screen { background-image: url('assets/images/bg_home.png'); }
+        #tujuan-screen { background-image: url('assets/images/tujuan.png'); }
+        #materi-screen { background-image: url('assets/images/materi.png'); }
+        #game-screen { background-image: url('assets/images/game.png'); }
+        #asesmen-screen { background-image: url('assets/images/asesmen.jpg'); }
+
+        /* Navigation */
+        .top-controls { position: fixed; top: 20px; left: 20px; z-index: 1000; display: flex; gap: 10px; }
+        .btn-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; }
+
+        /* Home Menu Buttons */
+        .btn-custom {
+            background: linear-gradient(45deg, var(--primary-green), var(--light-green));
+            color: white; border: 3px solid white; padding: 20px; border-radius: 15px;
+            font-size: 1.3rem; transition: 0.3s; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+        .btn-custom:hover { transform: translateY(-5px); color: var(--accent-yellow); }
+
+        /* Content Container */
+        .card-container { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 40px; border-radius: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            max-width: 950px; width: 100%; 
+            min-height: 500px;
+        }
+
+        /* Typography */
+        h3, h4 { font-size: 2rem; margin-bottom: 20px; font-weight: bold; }
+        p, li { font-size: 1.25rem; line-height: 1.8; text-align: justify; }
+        .arabic-text { font-size: 2.5rem; line-height: 4.8rem; text-align: right; direction: rtl; font-family: 'Amiri', serif; margin: 15px 0; }
+        
+        .t-green { color: #28a745; font-weight: bold; }
+        .t-blue { color: #007bff; font-weight: bold; }
+        .t-yellow { color: #ffc107; font-weight: bold; background: #333; padding: 2px 8px; border-radius: 5px; }
+
+        .materi-nav { width: 100%; max-width: 950px; display: flex; justify-content: space-between; margin-top: 25px; }
+        .btn-prev { background-color: white !important; color: #198754 !important; border: 2px solid #198754 !important; font-weight: bold; padding: 10px 25px; }
+
+        /* Game Elements */
+        .drop-box { min-height: 55px; border: 2px dashed var(--primary-green); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; min-width: 160px; background: #fff; vertical-align: middle; color: #2d6a4f; font-weight: bold; padding: 0 10px; }
+        .drag-word { cursor: pointer; padding: 10px 20px; background: var(--accent-yellow); border-radius: 10px; font-weight: bold; font-size: 1.1rem; display: inline-block; margin: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+        /* Quiz UI */
+        .opt-btn { color: white; border: 4px solid transparent; font-size: 1.2rem; padding: 18px; border-radius: 15px; transition: 0.3s; text-align: left; margin-bottom: 10px; width: 100%; }
+        .opt-a { background-color: var(--opt-a); }
+        .opt-b { background-color: var(--opt-b); }
+        .opt-c { background-color: var(--opt-c); }
+        .opt-d { background-color: var(--opt-d); }
+        .correct-feedback { background-color: #28a745 !important; border-color: #ffffff !important; }
+        .wrong-feedback { background-color: var(--wrong-red) !important; border-color: #ffffff !important; }
+        .outline-correct { border: 4px solid #28a745 !important; }
+    </style>
+</head>
+<body>
+
+    <div class="top-controls">
+        <button id="home-btn" class="btn btn-dark btn-circle" onclick="showScreen('home')" style="display: none;"><span class="material-icons">home</span></button>
+        <button class="btn btn-secondary btn-circle" onclick="toggleFullscreen()"><span class="material-icons">fullscreen</span></button>
+    </div>
+
+    <div id="home-screen" class="screen active-screen">
+        <div class="text-center bg-white bg-opacity-75 p-5 rounded-5 shadow-lg">
+            <h1 class="display-4 mb-5 text-dark fw-bold">MEDIA PEMBELAJARAN INTERAKTIF<br><span class="text-success">SURAH AT-TIIN</span></h1>
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-6"><button onclick="showScreen('tujuan')" class="btn-custom"><span class="material-icons">flag</span>Tujuan Pembelajaran</button></div>
+                <div class="col-md-6"><button onclick="showScreen('materi')" class="btn-custom"><span class="material-icons">auto_stories</span>Materi At-Tin</button></div>
+                <div class="col-md-6"><button onclick="showScreen('game')" class="btn-custom"><span class="material-icons">extension</span>Lengkapi Ayat</button></div>
+                <div class="col-md-6"><button onclick="showScreen('asesmen')" class="btn-custom"><span class="material-icons">quiz</span>Asesmen</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tujuan-screen" class="screen">
+        <h2 class="mb-4 fw-bold text-white">Tujuan Pembelajaran</h2>
+        <div class="card-container">
+            <ul class="mt-4">
+                <li>Membaca Q.S. At-Tin dengan tartil sesuai kaidah tajwid.</li>
+                <li>Mempraktikkan hukum bacaan nun sukun atau tanwin dalam ayat-ayat pilihan.</li>
+                <li>Menjelaskan pesan-pesan pokok yang terkandung dalam Q.S. At-Tin.</li>
+                <li>Menulis dan menghafal Q.S. At-Tin dengan lancar dan benar.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="materi-screen" class="screen">
+        <div class="card-container">
+            <div id="materi-content">
+                <div class="materi-slide" id="slide-1">
+                    <h3 class="text-danger">Simak Video Tilawah</h3>
+                    <div class="ratio ratio-16x9">
+                        <iframe id="video-attin" src="https://www.youtube.com/embed/8u7XETyu7Js?si=TWBzBIAjE84ogMap" title="Murottal Surah At-Tiin" allowfullscreen></iframe>
+                    </div>
+                    <p class="mt-3 text-center">Dengarkan dengan saksama cara pelafalan ayat demi ayat untuk melatih ketertilan membaca.</p>
+                </div>
+
+                <div class="materi-slide d-none" id="slide-2">
+                    <h3 class="text-primary">Ayo Berpikir!</h3>
+                    <p>Sebelum kita memulai pembelajaran, mari renungkan beberapa pertanyaan berikut:</p>
+                    <ul>
+                        <li>Tahukah kalian, apa makna dari nama at-Tīn?</li>
+                        <li>Mengapa Allah SWT memilih bersumpah menggunakan nama buah-buahan seperti tin dan zaitun?</li>
+                        <li>Apa kelebihan utama manusia dibandingkan makhluk Allah lainnya?</li>
+                        <li>Meskipun diciptakan sempurna, mengapa manusia dapat terjerumus ke tempat yang sangat rendah?</li>
+                    </ul>
+                </div>
+
+                <div class="materi-slide d-none" id="slide-3">
+                    <h3 class="text-success">Mengenal Surah At-Tiin</h3>
+                    <p>Surah at-Tīn menempati urutan ke-95 dalam susunan mushaf Al-Qur’an dan terdiri atas 8 ayat. Berdasarkan tempat turunnya, surah ini tergolong <strong>Makkiyah</strong> karena diturunkan pada periode Mekkah sebelum Rasulullah saw. berhijrah.</p>
+                    <p>Para ulama menamainya at-Tīn yang berarti <strong>buah tin</strong>, sesuai dengan kata yang muncul pada ayat pertama. Nama ini merupakan sumpah Allah untuk menarik perhatian manusia terhadap kandungan wahyu di dalamnya.</p>
+                </div>
+
+                <div class="materi-slide d-none" id="slide-4">
+                    <h4>Kandungan Ayat 1-3</h4>
+                    <div class="arabic-text">وَالتَّيْنِ وَالزَّيْتُونِ (١) وَطُورِ سِينِينَ (٢) وَهَٰذَا الْبَلَدِ الْأَمِينِ (٣)</div>
+                    <p>Allah bersumpah demi buah Tin, Zaitun, Gunung Sinai, dan kota Mekkah. Buah-buahan tersebut melambangkan wilayah Syam dan Baitul Maqdis tempat Nabi Isa a.s. diutus. Gunung Sinai adalah lokasi Nabi Musa a.s. menerima wahyu, sedangkan Mekkah adalah kota kelahiran Nabi Muhammad saw. Ketiganya membawa misi tauhid yang sama.</p>
+                </div>
+
+                <div class="materi-slide d-none" id="slide-5">
+                    <h4>Kandungan Ayat 4-5</h4>
+                    <div class="arabic-text">لَ<span class="t-green">قَدْ</span> خَ<span class="t-green">لَقْنَا</span> <span class="t-blue">الْإِنْسَا</span>نَ فِي أَحْسَنِ تَقْوِيمٍ (٤) ثُمَّ رَدَدْنَاهُ أَسْفَلَ سَافِلِينَ (٥)</div>
+                    <p>Manusia diciptakan sebagai mahakarya terbaik Allah, dilengkapi akal budi untuk memimpin bumi. Namun, jika manusia mengingkari ajaran Allah, mereka akan dijatuhkan ke tingkat paling rendah atau neraka. Kesempurnaan fisik tanpa keimanan tidak memiliki nilai di hadapan Allah.</p>
+                </div>
+
+                <div class="materi-slide d-none" id="slide-6">
+                    <h4>Kandungan Ayat 6-8</h4>
+                    <div class="arabic-text">إِلَّا الَّذِينَ آمَنُوا... (٦) فَمَا يُكَذِّبُكَ... (٧) أَلَيْسَ اللَّهُ بِأَحْكَمِ الْحَاكِمِينَ (٨)</div>
+                    <p>Hanya orang-orang yang beriman dan beramal saleh yang akan mendapatkan pahala abadi dan terhindar dari kerendahan. Ayat ini diakhiri dengan penegasan bahwa Allah adalah Hakim Yang Maha Adil. Dia tidak akan menyia-nyiakan amal hamba-Nya dan pasti memberikan balasan setimpal di hari pembalasan kelak.</p>
+                </div>
+
+                <div class="materi-slide d-none" id="slide-7">
+                    <h3 class="text-success">Kesimpulan Materi</h3>
+                    <p>Surah at-Tīn mengajarkan bahwa kemuliaan manusia tidak terletak pada keelokan wajah atau kekuatan fisik semata, melainkan pada keimanan yang kokoh dan perbuatan baik yang nyata. Allah memberikan peringatan keras bahwa ketidaktaatan akan menghapus segala kemuliaan tersebut. Kita juga belajar bahwa setiap perbuatan manusia akan diadili oleh Allah, Sang Hakim yang paling adil, yang mustahil melakukan kezaliman kepada hamba-Nya.</p>
+                </div>
+
+                <div class="materi-slide d-none" id="slide-8">
+                    <h3 class="text-warning">Refleksi Pembelajaran</h3>
+                    <p>Setelah mempelajari surah ini, mari kita berkaca pada diri sendiri:</p>
+                    <ul>
+                        <li>Sudahkah kita bersyukur atas kesempurnaan tubuh dan akal yang Allah berikan dengan cara beribadah tepat waktu?</li>
+                        <li>Apakah kita sudah memperlakukan sesama manusia dengan baik sebagai bentuk penghargaan terhadap makhluk ciptaan Allah yang paling mulia?</li>
+                        <li>Mari berkomitmen untuk senantiasa menjaga lisan dan perbuatan agar kita tidak tergolong ke dalam kelompok <i>asfala safilin</i> (tempat yang serendah-rendahnya).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="materi-nav">
+            <button class="btn btn-prev" onclick="changeSlide(-1)">Sebelumnya</button>
+            <span id="slideIndicator" class="fw-bold bg-white px-3 py-1 rounded shadow-sm">1 / 8</span>
+            <button class="btn btn-success" onclick="changeSlide(1)">Selanjutnya</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <h2 class="mb-4 fw-bold">Game: Lengkapi 4 Ayat Acak</h2>
+        <div class="card-container text-center">
+            <div id="game-area" class="arabic-text mb-4 text-center" dir="rtl"></div>
+            <div id="word-bank" class="d-flex flex-wrap justify-content-center p-3 bg-light rounded shadow-inner"></div>
+            <div class="mt-4"><button class="btn btn-primary btn-lg" onclick="initGame()"><span class="material-icons align-middle">refresh</span> Acak Ulang</button></div>
+        </div>
+    </div>
+
+    <div id="asesmen-screen" class="screen">
+        <h2 class="mb-4 fw-bold">Asesmen Mandiri</h2>
+        <div class="card-container">
+            <div id="quiz-container">
+                <p id="question" class="fs-4 fw-bold text-center mb-4"></p>
+                <div id="options" class="row row-cols-1 row-cols-md-2 g-3"></div>
+            </div>
+            <div id="result-container" class="d-none text-center">
+                <h3 class="display-3 text-success">Skor Anda: <span id="score">0</span></h3>
+                <button onclick="resetQuiz()" class="btn btn-primary btn-lg mt-3">Ulangi Kuis</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="sound-correct" src="assets/benar.mp3"></audio>
+    <audio id="sound-wrong" src="assets/salah.mp3"></audio>
+
+    <script>
+// FUNGSI BERHENTIKAN VIDEO
+        function stopVideo() {
+            const video = document.getElementById('video-attin');
+            if (video) {
+                const src = video.src;
+                video.src = src; // Merefresh src akan mematikan video yang sedang berjalan
+            }
+        }
+
+        function showScreen(id) {
+            stopVideo(); // Berhentikan video saat pindah menu utama
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id + '-screen').classList.add('active-screen');
+            document.getElementById('home-btn').style.display = (id === 'home') ? 'none' : 'flex';
+            if(id === 'game') initGame();
+            if(id === 'asesmen') resetQuiz();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
+        }
+
+        // Materi logic
+        let currentSlide = 1;
+        function changeSlide(n) {
+            document.querySelectorAll('.materi-slide').forEach(s => s.classList.add('d-none'));
+            currentSlide = Math.max(1, Math.min(8, currentSlide + n));
+            document.getElementById('slide-' + currentSlide).classList.remove('d-none');
+            document.getElementById('slideIndicator').innerText = currentSlide + ' / 8';
+        }
+
+        // GAME LOGIC: 4 Ayat Acak
+        const ayatData = [
+            { text: "وَالتَّيْنِ {0} (١)", missing: "وَالزَّيْتُونِ" },
+            { text: "{0} سِينِينَ (٢)", missing: "وَطُورِ" },
+            { text: "وَهَٰذَا الْبَلَدِ {0} (٣)", missing: "الْأَمِينِ" },
+            { text: "لَقَدْ خَلَقْنَا {0} فِي أَحْسَنِ تَقْوِيمٍ (٤)", missing: "الْإِنْسَانَ" },
+            { text: "ثُمَّ رَدَدْنَاهُ {0} سَافِلِينَ (٥)", missing: "أَسْفَلَ" },
+            { text: "إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا {0} (٦)", missing: "الصَّالِحَاتِ" },
+            { text: "فَمَا يُكَذِّبُكَ بَعْدُ {0} (٧)", missing: "بِالدِّينِ" },
+            { text: "أَلَيْسَ اللَّهُ بِأَحْكَمِ {0} (٨)", missing: "الْحَاكِمِينَ" }
+        ];
+
+        function initGame() {
+            const area = document.getElementById('game-area');
+            const bank = document.getElementById('word-bank');
+            area.innerHTML = ''; bank.innerHTML = '';
+            
+            // Ambil 4 ayat acak
+            const shuffled = [...ayatData].sort(() => 0.5 - Math.random()).slice(0, 4);
+            const words = shuffled.map(a => a.missing).sort(() => 0.5 - Math.random());
+
+            shuffled.forEach(a => {
+                const parts = a.text.split('{0}');
+                const div = document.createElement('div');
+                div.className = "mb-3";
+                div.innerHTML = `${parts[0]} <div class="drop-box" data-ans="${a.missing}">...</div> ${parts[1]}`;
+                area.appendChild(div);
+            });
+
+            words.forEach(w => {
+                const span = document.createElement('div');
+                span.className = 'drag-word';
+                span.innerText = w;
+                span.draggable = true;
+                span.id = 'word-' + Math.random();
+                span.ondragstart = (e) => e.dataTransfer.setData('text', e.target.id);
+                bank.appendChild(span);
+            });
+
+            document.querySelectorAll('.drop-box').forEach(box => {
+                box.ondragover = (e) => e.preventDefault();
+                box.ondrop = (e) => {
+                    const id = e.dataTransfer.getData('text');
+                    const word = document.getElementById(id);
+                    if(word.innerText === box.dataset.ans) {
+                        box.innerText = word.innerText;
+                        box.style.background = "#d4edda";
+                        box.style.borderStyle = "solid";
+                        word.style.display = 'none';
+                        document.getElementById('sound-correct').play();
+                    } else {
+                        document.getElementById('sound-wrong').play();
+                    }
+                };
+            });
+        }
+
+        // Asesmen logic (10 soal tetap)
+        const questions = [
+            { q: "Apa arti at-Tin?", a: ["Zaitun", "Gunung", "Buah Tin", "Mekkah"], c: 2 },
+            { q: "Surah at-Tin terdiri dari berapa ayat?", a: ["7", "8", "9", "10"], c: 1 },
+            { q: "Di mana surah at-Tin diturunkan?", a: ["Madinah", "Mekkah", "Mesir", "Palestina"], c: 1 },
+            { q: "Siapa Nabi yang diutus di tempat tumbuhnya buah Tin & Zaitun?", a: ["Nabi Musa", "Nabi Isa", "Nabi Muhammad", "Nabi Adam"], c: 1 },
+            { q: "Gunung Sinai adalah tempat bermunajat Nabi...", a: ["Isa", "Musa", "Ibrahim", "Muhammad"], c: 1 },
+            { q: "Manusia diciptakan dalam bentuk yang...", a: ["Biasa saja", "Sangat kuat", "Sebaik-baiknya", "Sederhana"], c: 2 },
+            { q: "Apa yang membuat manusia jatuh ke tempat rendah?", a: ["Miskin", "Sakit", "Durhaka", "Tua"], c: 2 },
+            { q: "Apa janji Allah bagi yang beriman dan beramal saleh?", a: ["Harta", "Pahala tak putus", "Kekuatan", "Pujian"], c: 1 },
+            { q: "Bagaimana perumpamaan hari kebangkitan dalam materi?", a: ["Tanah tandus hidup karena hujan", "Matahari terbit", "Gunung meletus", "Bintang jatuh"], c: 0 },
+            { q: "Allah adalah Hakim yang paling...", a: ["Keras", "Adil", "Cepat", "Kaya"], c: 1 }
+        ];
+
+        let curQ = 0, score = 0;
+        function loadQuestion() {
+            if(curQ >= questions.length) {
+                document.getElementById('quiz-container').classList.add('d-none');
+                document.getElementById('result-container').classList.remove('d-none');
+                document.getElementById('score').innerText = (score/questions.length)*100;
+                return;
+            }
+            const q = questions[curQ];
+            document.getElementById('question').innerText = q.q;
+            const container = document.getElementById('options');
+            container.innerHTML = '';
+            ['a','b','c','d'].forEach((l, i) => {
+                const col = document.createElement('div');
+                col.className = "col";
+                col.innerHTML = `<button class="opt-btn opt-${l}">${String.fromCharCode(65+i)}. ${q.a[i]}</button>`;
+                col.firstChild.onclick = () => checkAns(i, col.firstChild);
+                container.appendChild(col);
+            });
+        }
+
+        function checkAns(idx, btn) {
+            const correctIdx = questions[curQ].c;
+            if(idx === correctIdx) {
+                score++;
+                btn.classList.add('correct-feedback');
+                document.getElementById('sound-correct').play();
+            } else {
+                btn.classList.add('wrong-feedback');
+                document.querySelectorAll('.opt-btn')[correctIdx].classList.add('outline-correct');
+                document.getElementById('sound-wrong').play();
+            }
+            setTimeout(() => { curQ++; loadQuestion(); }, 1500);
+        }
+
+        function resetQuiz() {
+            curQ = 0; score = 0;
+            document.getElementById('quiz-container').classList.remove('d-none');
+            document.getElementById('result-container').classList.add('d-none');
+            loadQuestion();
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
