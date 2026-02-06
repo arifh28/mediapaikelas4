@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPI: Hadis Tentang Silaturahmi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --primary-blue: #4a90e2;
+            --dark-blue: #2c3e50;
+            --accent-yellow: #f5a623;
+            --text-dark: #333333;
+            --card-radius: 25px;
+            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 15px 35px rgba(74, 144, 226, 0.2);
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Lato', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            overflow: hidden;
+        }
+
+        h1, h2, h3, h4, .btn-font {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* --- GLOBAL CONTROLS (Top Right) --- */
+        .global-controls {
+            position: fixed;
+            top: 25px;
+            right: 30px;
+            z-index: 1050;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-control {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--primary-blue);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-control:hover {
+            transform: translateY(-3px);
+            background-color: var(--accent-yellow);
+            color: white;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .app-container {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0; /* Menghilangkan padding agar full screen */
+            position: relative;
+        }
+
+        .mpi-section {
+            display: none;
+            width: 100vw;  /* Full Viewport Width */
+            height: 100vh; /* Full Viewport Height */
+            max-width: none;
+            border-radius: 0;
+            padding: 0;
+            
+            /* Background settings */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .mpi-section.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- BACKGROUND IMAGES (FULL & NO OVERLAY) --- */
+        #homeSection { background-image: url('assets/images/home.jpg'); }
+        #tujuanSection { background-image: url('assets/images/tujuan.jpg'); }
+        #materiSection { background-image: url('assets/images/materi.png'); }
+        #gameSection { background-image: url('assets/images/game.png'); }
+        #asesmenSection { background-image: url('assets/images/asesmen.png'); }
+
+        /* --- HOME LAYOUT --- */
+        .home-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            padding: 40px; /* Padding internal untuk konten Home */
+            background: rgba(255, 255, 255, 0.0); /* Transparan */
+        }
+
+        .home-left {
+            padding: 40px;
+            text-align: left;
+        }
+        
+        /* Agar teks Home terbaca di atas background gambar, diberi text-shadow atau background tipis jika perlu. 
+           Di sini saya beri text-shadow putih agar kontras */
+        .home-title {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--dark-blue);
+            line-height: 1.1;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0px rgba(255,255,255,0.8);
+        }
+
+        .home-subtitle {
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 20px;
+            background: white;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .home-divider {
+            width: 100px;
+            height: 6px;
+            background-color: var(--accent-yellow);
+            border-radius: 3px;
+            margin-bottom: 20px;
+        }
+
+        .home-right {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .menu-btn {
+            background: rgba(255, 255, 255, 0.9); /* Sedikit transparan */
+            height: 180px;
+            border-radius: var(--card-radius);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--soft-shadow);
+            border: 2px solid white;
+            text-decoration: none;
+            color: var(--text-dark);
+            backdrop-filter: blur(5px);
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--hover-shadow);
+            border-color: var(--primary-blue);
+            background: white;
+        }
+
+        .menu-btn i {
+            font-size: 3.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+        }
+
+        .menu-btn span {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .menu-btn:hover i { color: var(--accent-yellow); }
+
+        /* --- CONTENT CARD STYLE (Updated for Floating Card) --- */
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--card-radius);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            padding: 40px;
+            
+            /* Mengatur ukuran card agar background tetap terlihat */
+            width: 90%; 
+            max-width: 1200px;
+            height: 85vh; /* Tidak full height, agar melayang */
+            
+            overflow-y: auto;
+            border-top: 8px solid var(--primary-blue);
+            position: relative;
+        }
+
+        /* --- SLIDER STYLES --- */
+        .slide-container { display: none; height: 100%; }
+        .slide-container.active { display: flex; flex-direction: column; }
+        
+        .slide-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hadits-box {
+            background-color: #fdfbf7;
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px dashed var(--accent-yellow);
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .arabic {
+            font-family: 'Traditional Arabic', serif;
+            font-size: 2.8rem;
+            color: var(--dark-blue);
+            margin-bottom: 15px;
+            direction: rtl;
+        }
+
+        /* --- GAME & QUIZ STYLES --- */
+        .draggable {
+            background: white;
+            border: 2px solid var(--primary-blue);
+            padding: 15px;
+            margin: 10px;
+            border-radius: 15px;
+            cursor: grab;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .dropzone {
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 15px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            transition: all 0.3s;
+            font-weight: bold;
+            color: #777;
+        }
+        .dropzone.correct { background: #d4edda; border-color: #28a745; color: #155724; border-style: solid; }
+
+        .quiz-option {
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            text-align: left;
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .quiz-option:hover { background: #f0f8ff; border-color: var(--primary-blue); }
+        .quiz-option.correct-answer { background: #d4edda !important; border-color: #28a745 !important; }
+        .quiz-option.wrong-answer { background: #f8d7da !important; border-color: #dc3545 !important; }
+
+        @media (max-width: 992px) {
+            .home-layout { flex-direction: column; justify-content: center; text-align: center; padding: 20px; }
+            .home-left { padding: 20px; text-align: center; }
+            .home-divider { margin: 0 auto 20px auto; }
+            .home-title { font-size: 2.5rem; }
+            .menu-grid { margin-top: 20px; }
+            .content-card { width: 95%; height: 90vh; padding: 20px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="audioBenar" src="assets/benar.mp3"></audio>
+    <audio id="audioSalah" src="assets/salah.mp3"></audio>
+
+    <div class="global-controls">
+        <button class="btn-control" onclick="toggleFullscreen()" title="Fullscreen">
+            <i class="fas fa-expand" id="fullscreenIcon"></i>
+        </button>
+        <button class="btn-control" onclick="goHome()" title="Home">
+            <i class="fas fa-home"></i>
+        </button>
+    </div>
+
+    <div class="app-container">
+
+        <section id="homeSection" class="mpi-section active">
+            <div class="home-layout row m-0">
+                <div class="col-lg-6 home-left">
+                    <div class="home-divider"></div>
+                    <h1 class="home-title">Hadis Tentang<br>Silaturahmi</h1>
+                    <span class="home-subtitle">Muttafaq ‘Alaih dari Abu Hurairah r.a.</span>
+                    <p class="mt-4 fw-bold lead" style="color: #2c3e50; text-shadow: 1px 1px 0px white;">Media Pembelajaran Interaktif PAI Kelas 4</p>
+                </div>
+
+                <div class="col-lg-6 home-right">
+                    <div class="menu-grid">
+                        <div class="menu-btn" onclick="showSection('tujuanSection')">
+                            <i class="fas fa-bullseye"></i>
+                            <span>Tujuan</span>
+                        </div>
+                        <div class="menu-btn" onclick="showSection('materiSection')">
+                            <i class="fas fa-book-reader"></i>
+                            <span>Materi</span>
+                        </div>
+                        <div class="menu-btn" onclick="showSection('gameSection')">
+                            <i class="fas fa-puzzle-piece"></i>
+                            <span>Game</span>
+                        </div>
+                        <div class="menu-btn" onclick="showSection('asesmenSection')">
+                            <i class="fas fa-clipboard-check"></i>
+                            <span>Kuis</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tujuanSection" class="mpi-section">
+            <div class="content-card">
+                <h2 class="text-primary mb-4"><i class="fas fa-bullseye me-2"></i>Tujuan Pembelajaran</h2>
+                <div class="p-4 bg-light rounded-4 border">
+                    <ul class="list-unstyled" style="font-size: 1.2rem; line-height: 2;">
+                        <li><i class="fas fa-check-circle text-success me-3"></i>Menjelaskan keterkaitan keberagaman dengan perintah silaturahmi.</li>
+                        <li><i class="fas fa-check-circle text-success me-3"></i>Menyebutkan pesan pokok manusia sebagai khalifah di bumi.</li>
+                        <li><i class="fas fa-check-circle text-success me-3"></i>Membaca hadis tentang silaturahmi dengan fasih.</li>
+                        <li><i class="fas fa-check-circle text-success me-3"></i>Mengartikan hadis tentang silaturahmi riwayat Muttafaq ‘Alaih.</li>
+                        <li><i class="fas fa-check-circle text-success me-3"></i>Membiasakan sikap silaturahmi dalam kehidupan sehari-hari.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="materiSection" class="mpi-section">
+            <div class="content-card d-flex flex-column">
+                
+                <div class="slide-container active" id="slide1">
+                    <div class="slide-content">
+                        <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill">Apersepsi</span>
+                        <h2 class="display-6 fw-bold text-dark mb-4">Pernahkah Kamu Merasa...</h2>
+                        <div class="row justify-content-center g-4">
+                            <div class="col-md-5">
+                                <div class="p-4 bg-white shadow-sm rounded-4 border">
+                                    <i class="fas fa-smile-beam text-primary display-4 mb-3"></i>
+                                    <h4>Sangat Gembira?</h4>
+                                    <p>Rasanya hambar jika gembira sendirian, bukan? Kita butuh teman untuk berbagi tawa.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="p-4 bg-white shadow-sm rounded-4 border">
+                                    <i class="fas fa-sad-tear text-primary display-4 mb-3"></i>
+                                    <h4>Sedang Sedih?</h4>
+                                    <p>Kita butuh sahabat yang mendampingi agar kesedihan tidak berlarut-larut.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-4 lead fw-bold text-primary">Itulah tanda bahwa manusia saling membutuhkan!</p>
+                    </div>
+                </div>
+
+                <div class="slide-container" id="slide2">
+                    <div class="slide-content">
+                        <h3 class="mb-3 text-primary">Simak Video Tentang Silaturahmi</h3>
+                        <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow" style="max-width: 800px; width: 100%;">
+                            <iframe id="materiVideo" src="https://www.youtube.com/embed/xUE-IJTbqmc?si=FCDIX9XfuURAv6wd" title="YouTube video" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container" id="slide3">
+                    <div class="slide-content text-start p-3">
+                        <h3 class="text-primary mb-4">Mengapa Kita Harus Bersilaturahmi?</h3>
+                        <div class="row align-items-center">
+                            <div class="col-md-4 text-center">
+                                <img src="assets/images/keberagaman.png" class="img-fluid rounded-circle" alt="Keberagaman">
+                            </div>
+                            <div class="col-md-8">
+                                <p class="lead">Masih ingat pelajaran Semester 1 tentang <strong>Surah At-Tin</strong>?</p>
+                                <ul class="list-group list-group-flush bg-transparent">
+                                    <li class="list-group-item bg-transparent border-0 ps-0"><i class="fas fa-arrow-right text-primary me-2"></i>Manusia diciptakan oleh Allah berbangsa-bangsa dan bersuku-suku.</li>
+                                    <li class="list-group-item bg-transparent border-0 ps-0"><i class="fas fa-arrow-right text-primary me-2"></i>Manusia diciptakan dalam bentuk sebaik-baiknya.</li>
+                                    <li class="list-group-item bg-transparent border-0 ps-0"><i class="fas fa-arrow-right text-primary me-2"></i>Manusia diberi amanah menjadi <strong>Pemimpin (Khalifah)</strong> di bumi.</li>
+                                </ul>
+                                <div class="alert alert-info mt-3 border-0 rounded-3">
+                                    <i class="fas fa-lightbulb me-2"></i>Tugas manusia adalah melestarikan bumi. Hal ini hanya bisa dilakukan dengan <strong>Kerja Sama</strong> dan <strong>Silaturahmi</strong>.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container" id="slide4">
+                    <div class="slide-content">
+                        <h3 class="text-primary mb-2">Hadis Rasulullah Saw.</h3>
+                        <p class="text-muted">Bacalah dengan saksama:</p>
+                        <div class="hadits-box">
+                            <p class="arabic">... مَنْ كَانَ يُؤْمِنُ بِاللّٰهِ وَالْيَوْمِ الْآخِرِ فَلْيَصِلْ رَحِمَهُ ...</p>
+                            <p class="fst-italic mt-3" style="font-size: 1.1rem;">(...Man kaana yu'minu billaahi wal yaumil aakhiri falyashil rahimahu...)</p>
+                        </div>
+                        <div class="bg-primary text-white p-4 rounded-4 shadow-sm mt-2" style="max-width: 800px;">
+                            <h5 class="fw-bold border-bottom pb-2 d-inline-block border-white">Artinya:</h5>
+                            <p class="lead mb-0">"Barang siapa yang beriman kepada Allah dan hari akhir, maka hendaklah mempererat silaturahmi."</p>
+                            <p class="text-end mt-2 mb-0 small opacity-75">(Muttafaq ‘Alaih dari Abu Hurairah r.a.)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container" id="slide5">
+                    <div class="slide-content">
+                        <h2 class="text-primary mb-4">Kesimpulan Pembelajaran</h2>
+                        <div class="row g-3 justify-content-center">
+                            <div class="col-md-4">
+                                <div class="p-3 bg-white border rounded-4 h-100 shadow-sm">
+                                    <div class="text-warning display-4 mb-2"><i class="fas fa-globe-asia"></i></div>
+                                    <h5>Keberagaman</h5>
+                                    <p class="small text-muted">Allah menciptakan kita berbeda agar saling mengenal dan bekerja sama.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-white border rounded-4 h-100 shadow-sm">
+                                    <div class="text-primary display-4 mb-2"><i class="fas fa-hands-helping"></i></div>
+                                    <h5>Tanda Iman</h5>
+                                    <p class="small text-muted">Orang yang beriman kepada Allah & Hari Akhir pasti menyambung silaturahmi.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-white border rounded-4 h-100 shadow-sm">
+                                    <div class="text-danger display-4 mb-2"><i class="fas fa-heart"></i></div>
+                                    <h5>Sosial</h5>
+                                    <p class="small text-muted">Kita butuh orang lain saat gembira maupun sedih.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="slide-container" id="slide6">
+                    <div class="slide-content">
+                        <h2 class="text-primary mb-4">Refleksi Diri</h2>
+                        <div class="p-5 bg-light rounded-pill border border-warning position-relative overflow-hidden">
+                            <i class="fas fa-quote-left text-warning opacity-25 position-absolute top-0 start-0 display-1 ms-3"></i>
+                            <p class="lead fw-bold fst-italic position-relative z-1 mb-4">
+                                "Sudahkah aku menyapa teman atau saudaraku hari ini?"
+                            </p>
+                            <p class="mb-0">Yuk, jangan tunggu nanti. Sapa mereka sekarang dengan senyuman! 😊</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-auto pt-4 border-top">
+                    <button class="btn btn-outline-secondary rounded-pill px-4" id="prevSlideBtn" onclick="changeSlide(-1)">
+                        <i class="fas fa-arrow-left me-2"></i>Sebelumnya
+                    </button>
+                    <span class="align-self-center text-muted fw-bold" id="slideIndicator">1/6</span>
+                    <button class="btn btn-primary rounded-pill px-4" id="nextSlideBtn" onclick="changeSlide(1)">
+                        Selanjutnya<i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="gameSection" class="mpi-section">
+            <div class="content-card text-center">
+                <h3 class="text-primary mb-2">Game: Pasangkan Konsep</h3>
+                <p class="text-muted mb-4">Tarik kotak di sebelah kiri ke kotak makna yang sesuai di sebelah kanan.</p>
+                
+                <h5 id="gameFeedback" class="min-h-30 mb-3 fw-bold"></h5>
+
+                <div class="row justify-content-center">
+                    <div class="col-md-5">
+                        <div class="p-3 bg-light rounded-4 border">
+                            <h5 class="text-muted mb-3">Pernyataan</h5>
+                            <div class="draggable" id="drag1" draggable="true">Manusia Diciptakan</div>
+                            <div class="draggable" id="drag2" draggable="true">Tugas Manusia</div>
+                            <div class="draggable" id="drag3" draggable="true">Gembira Sendirian</div>
+                            <div class="draggable" id="drag4" draggable="true">Tanda Beriman</div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="p-3 bg-light rounded-4 border">
+                            <h5 class="text-muted mb-3">Jawaban / Makna</h5>
+                            <div class="dropzone" id="drop3" data-match="drag3">Terasa Hambar</div>
+                            <div class="dropzone" id="drop1" data-match="drag1">Berbangsa & Bersuku</div>
+                            <div class="dropzone" id="drop4" data-match="drag4">Mempererat Silaturahmi</div>
+                            <div class="dropzone" id="drop2" data-match="drag2">Melestarikan Bumi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-warning text-white rounded-pill px-4 shadow-sm" onclick="resetGame()">
+                        <i class="fas fa-redo me-2"></i>Ulangi Game
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="asesmenSection" class="mpi-section">
+            <div class="content-card text-center d-flex flex-column justify-content-center">
+                <h3 class="text-primary mb-4">Kuis Pemahaman</h3>
+
+                <div id="quizStart">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3407/3407024.png" alt="Quiz" style="width: 120px; opacity: 0.8;" class="mb-4">
+                    <p class="lead mb-4">Jawablah 10 pertanyaan berdasarkan materi yang telah dipelajari.</p>
+                    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" onclick="startQuiz()">Mulai Sekarang</button>
+                </div>
+
+                <div id="quizContainer" style="display: none;">
+                    <div class="d-flex justify-content-between text-muted mb-3 px-4">
+                        <span>Soal <span id="qNum">1</span>/10</span>
+                        <span>Skor: <span id="qScore">0</span></span>
+                    </div>
+                    
+                    <h4 id="questionText" class="mb-4 text-dark fw-bold px-4">Loading Question...</h4>
+                    
+                    <div id="answersContainer" class="d-flex flex-column align-items-center px-4" style="max-width: 700px; margin: 0 auto; width: 100%;">
+                    </div>
+                </div>
+
+                <div id="quizResult" style="display: none;">
+                    <h2 class="text-dark">Kuis Selesai!</h2>
+                    <div class="display-1 fw-bold text-primary my-3" id="finalScore">0</div>
+                    <p class="lead mb-4" id="finalMsg"></p>
+                    <button class="btn btn-outline-primary rounded-pill px-4" onclick="resetQuiz()">Kembali ke Awal</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- VIDEO STOP FUNCTION ---
+        function stopVideo() {
+            const iframe = document.getElementById('materiVideo');
+            if (iframe) {
+                const currentSrc = iframe.src;
+                iframe.src = ''; 
+                iframe.src = currentSrc;
+            }
+        }
+
+        // --- NAVIGATION ---
+        function goHome() {
+            stopVideo();
+            showSection('homeSection');
+        }
+
+        function showSection(id) {
+            if(document.getElementById('materiSection').classList.contains('active')) {
+                stopVideo();
+            }
+            document.querySelectorAll('.mpi-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            
+            if(id === 'materiSection') resetSlides();
+            if(id === 'asesmenSection') document.getElementById('quizStart').style.display = 'block';
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => console.log(e));
+                document.getElementById('fullscreenIcon').classList.replace('fa-expand', 'fa-compress');
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                document.getElementById('fullscreenIcon').classList.replace('fa-compress', 'fa-expand');
+            }
+        }
+
+        // --- AUDIO ---
+        function playAudio(type) {
+            const audio = document.getElementById(type === 'correct' ? 'audioBenar' : 'audioSalah');
+            audio.currentTime = 0;
+            audio.play().catch(e => {});
+        }
+
+        // --- SLIDER LOGIC ---
+        let currentSlide = 1;
+        const totalSlides = 6;
+
+        function changeSlide(dir) {
+            stopVideo();
+            const next = currentSlide + dir;
+            if(next < 1 || next > totalSlides) return;
+
+            document.getElementById(`slide${currentSlide}`).classList.remove('active');
+            currentSlide = next;
+            document.getElementById(`slide${currentSlide}`).classList.add('active');
+            
+            document.getElementById('slideIndicator').innerText = `${currentSlide}/${totalSlides}`;
+            document.getElementById('prevSlideBtn').disabled = (currentSlide === 1);
+            document.getElementById('nextSlideBtn').disabled = (currentSlide === totalSlides);
+        }
+
+        function resetSlides() {
+            currentSlide = 1;
+            document.querySelectorAll('.slide-container').forEach(el => el.classList.remove('active'));
+            document.getElementById('slide1').classList.add('active');
+            document.getElementById('slideIndicator').innerText = `1/${totalSlides}`;
+            document.getElementById('prevSlideBtn').disabled = true;
+            document.getElementById('nextSlideBtn').disabled = false;
+        }
+
+        // --- GAME LOGIC ---
+        const draggables = document.querySelectorAll('.draggable');
+        const dropzones = document.querySelectorAll('.dropzone');
+        let activeTouchItem = null;
+
+        // Mouse Events
+        draggables.forEach(d => {
+            d.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('text/plain', d.id);
+                setTimeout(() => d.style.display = 'none', 0);
+            });
+            d.addEventListener('dragend', () => {
+                setTimeout(() => d.style.display = 'block', 0);
+            });
+        });
+
+        dropzones.forEach(z => {
+            z.addEventListener('dragover', e => {
+                e.preventDefault();
+                z.classList.add('drag-over');
+            });
+            z.addEventListener('dragleave', () => z.classList.remove('drag-over'));
+            z.addEventListener('drop', e => {
+                e.preventDefault();
+                z.classList.remove('drag-over');
+                const id = e.dataTransfer.getData('text/plain');
+                const item = document.getElementById(id);
+                handleMatch(item, z);
+            });
+        });
+
+        // Touch Events
+        draggables.forEach(d => {
+            d.addEventListener('touchstart', e => {
+                activeTouchItem = d;
+                d.style.opacity = '0.5';
+            });
+            
+            d.addEventListener('touchend', e => {
+                if(!activeTouchItem) return;
+                activeTouchItem.style.opacity = '1';
+                
+                const touch = e.changedTouches[0];
+                const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const dropzone = elemBelow ? elemBelow.closest('.dropzone') : null;
+                
+                if(dropzone) {
+                    handleMatch(activeTouchItem, dropzone);
+                }
+                activeTouchItem = null;
+            });
+        });
+
+        function handleMatch(dragEl, dropEl) {
+            if(dropEl.dataset.match === dragEl.id) {
+                dropEl.innerHTML = `<span class="text-success"><i class="fas fa-check me-2"></i>${dragEl.innerText}</span>`;
+                dropEl.classList.add('correct');
+                dragEl.style.visibility = 'hidden';
+                playAudio('correct');
+                document.getElementById('gameFeedback').textContent = "Benar! Bagus Sekali.";
+                document.getElementById('gameFeedback').className = "text-success mb-3 fw-bold";
+            } else {
+                playAudio('wrong');
+                document.getElementById('gameFeedback').textContent = "Kurang tepat, coba lagi.";
+                document.getElementById('gameFeedback').className = "text-danger mb-3 fw-bold";
+            }
+        }
+
+        function resetGame() {
+            draggables.forEach(d => {
+                d.style.visibility = 'visible';
+                d.style.display = 'block';
+                d.style.opacity = '1';
+            });
+            dropzones.forEach(z => {
+                z.classList.remove('correct');
+                z.innerHTML = getOriginalText(z.id);
+            });
+            document.getElementById('gameFeedback').textContent = "";
+        }
+
+        function getOriginalText(id) {
+            if(id==='drop1') return "Berbangsa & Bersuku";
+            if(id==='drop2') return "Melestarikan Bumi";
+            if(id==='drop3') return "Terasa Hambar";
+            if(id==='drop4') return "Mempererat Silaturahmi";
+            return "";
+        }
+
+        // --- QUIZ LOGIC ---
+        const quizData = [
+            { q: "Mengapa Allah menciptakan manusia berbangsa-bangsa dan bersuku-suku?", a: ["Agar saling mengenal", "Agar saling bermusuhan", "Agar saling bersaing", "Agar hidup sendiri"], c: 0 },
+            { q: "Apa salah satu pesan pokok dari Surah At-Tin yang disebutkan dalam materi?", a: ["Manusia makhluk terkuat", "Manusia diciptakan dalam bentuk sebaik-baiknya", "Manusia diciptakan dari cahaya", "Manusia tidak boleh makan buah Tin"], c: 1 },
+            { q: "Sebagai makhluk yang diberi kelebihan, manusia diberi amanah menjadi...", a: ["Raja di langit", "Malaikat", "Pemimpin (Khalifah) di bumi", "Penguasa lautan"], c: 2 },
+            { q: "Apa tugas utama manusia sebagai pemimpin di bumi?", a: ["Merusak hutan", "Membangun gedung tinggi", "Melestarikan bumi", "Mencari harta karun"], c: 2 },
+            { q: "Bagaimana cara manusia melestarikan bumi?", a: ["Bekerja sendiri-sendiri", "Bekerja sama dan silaturahmi", "Meminta bantuan jin", "Diam saja di rumah"], c: 1 },
+            { q: "Mengapa kita membutuhkan sahabat saat merasa gembira?", a: ["Agar bisa pamer", "Karena terasa hambar jika dirasakan sendiri", "Agar mendapat hadiah", "Supaya tidak diganggu"], c: 1 },
+            { q: "Bunyi arti hadis: 'Barang siapa yang beriman kepada Allah dan hari akhir, maka hendaklah...'", a: ["Salat tepat waktu", "Mempererat silaturahmi", "Berpuasa", "Bersedekah"], c: 1 },
+            { q: "Siapakah perawi hadis tentang silaturahmi tersebut?", a: ["H.R. Tirmidzi", "H.R. Abu Daud", "Muttafaq ‘Alaih dari Abu Hurairah r.a.", "H.R. Muslim"], c: 2 },
+            { q: "Apa yang kita butuhkan saat sedang sedih?", a: ["Makanan yang banyak", "Sahabat yang mendampingi", "Mainan baru", "Uang yang banyak"], c: 1 },
+            { q: "Selain beriman kepada Allah, syarat mempererat silaturahmi dalam hadis tersebut dikaitkan dengan iman kepada...", a: ["Malaikat", "Kitab-kitab", "Hari Akhir", "Takdir"], c: 2 }
+        ];
+
+        let quizIdx = 0;
+        let score = 0;
+
+        function startQuiz() {
+            document.getElementById('quizStart').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('quizResult').style.display = 'none';
+            quizIdx = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const data = quizData[quizIdx];
+            document.getElementById('qNum').textContent = quizIdx + 1;
+            document.getElementById('qScore').textContent = score * 10;
+            document.getElementById('questionText').textContent = data.q;
+            
+            const cont = document.getElementById('answersContainer');
+            cont.innerHTML = '';
+            
+            data.a.forEach((ans, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn quiz-option';
+                btn.textContent = ans;
+                btn.onclick = () => checkAnswer(i, btn, data.c);
+                cont.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(idx, btn, correct) {
+            const allBtns = document.querySelectorAll('.quiz-option');
+            allBtns.forEach(b => b.disabled = true);
+            
+            if(idx === correct) {
+                btn.classList.add('correct-answer');
+                playAudio('correct');
+                score++;
+            } else {
+                btn.classList.add('wrong-answer');
+                allBtns[correct].classList.add('correct-answer');
+                playAudio('wrong');
+            }
+            
+            setTimeout(() => {
+                quizIdx++;
+                if(quizIdx < quizData.length) loadQuestion();
+                else endQuiz();
+            }, 1500);
+        }
+
+        function endQuiz() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('quizResult').style.display = 'block';
+            
+            const final = score * 10;
+            document.getElementById('finalScore').textContent = final;
+            
+            let msg = "";
+            if(final === 100) msg = "Sempurna! Kamu hebat sekali! 🌟";
+            else if(final >= 80) msg = "Luar biasa! Pertahankan! 👍";
+            else msg = "Jangan menyerah, ayo belajar lagi! 💪";
+            document.getElementById('finalMsg').textContent = msg;
+        }
+
+        function resetQuiz() {
+            document.getElementById('quizResult').style.display = 'none';
+            document.getElementById('quizStart').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
