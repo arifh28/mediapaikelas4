@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MPI Akhlak Mulia - Salam</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --hijau: #2d5a27; --kuning: #fbc02d; --kuning-light: #fffde7; }
+        
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: 'Alegreya', serif;
+        }
+
+        .screen {
+            display: none; width: 100vw; height: 100vh;
+            background-size: cover; background-position: center;
+            position: relative; align-items: center; justify-content: center;
+        }
+        .active-screen { display: flex; }
+
+        /* Backgrounds (Sesuai File Upload) */
+        #home { background-image: url('assets/images/home.jpg'); }
+        #materi { background-image: url('assets/images/materi.png'); }
+        #asesmen { background-image: url('assets/images/asesmen.png'); }
+        #tujuan { background-image: url('assets/images/tujuan.png'); }
+        #game { background-image: url('assets/images/game.png'); }
+
+        /* Glassmorphism Title Box */
+        .glass-box {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 20px 40px;
+            display: inline-block;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        .content-box {
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 30px;
+            width: 75%;
+            max-height: 85vh;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .btn-menu {
+            background: var(--hijau); color: white;
+            border: none; border-radius: 20px;
+            padding: 18px 25px; margin-bottom: 20px; width: 100%;
+            font-family: 'Almendra', serif; font-size: 1.3rem;
+            text-align: left;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex; align-items: center;
+        }
+        .btn-menu i { width: 40px; font-size: 1.5rem; color: var(--kuning); }
+        .btn-menu:hover { transform: translateX(10px); background: #1e3d1a; color: var(--kuning); }
+
+        /* CSS ASESMEN BARU - WARNA AWAL NETRAL (BIRU, KUNING, UNGU, CYAN) */
+        .opt-btn { 
+            border: none; border-radius: 15px; padding: 15px; margin: 5px; width: 100%; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;
+            font-size: 1.1rem; color: #333;
+        }
+        
+        /* Warna Pilihan Jawaban Awal (NO RED, NO GREEN) */
+        .ans-0 { background-color: #64B5F6 !important; color: white !important; } /* Biru Langit */
+        .ans-1 { background-color: #FFD54F !important; color: black !important; } /* Kuning Emas */
+        .ans-2 { background-color: #9575CD !important; color: white !important; } /* Ungu */
+        .ans-3 { background-color: #4DD0E1 !important; color: black !important; } /* Cyan */
+
+        /* Feedback State (Baru muncul Hijau/Merah setelah diklik) */
+        .correct-ans { background-color: #2ecc71 !important; color: white !important; transform: scale(1.02); box-shadow: 0 0 15px #2ecc71; }
+        .wrong-ans { background-color: #e74c3c !important; color: white !important; opacity: 0.7; }
+        
+        .arabic { font-size: 2.2rem; text-align: center; color: var(--hijau); margin: 15px 0; line-height: 1.6; }
+        .inner-nav { display: flex; justify-content: space-between; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 15px; }
+
+        .slide-materi { display: none; overflow-y: auto; flex-grow: 1; }
+        .slide-materi.active-slide { display: block; }
+        .controls { position: absolute; top: 20px; left: 20px; z-index: 999; display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button class="btn btn-warning shadow" onclick="toggleFullScreen()"><i class="fas fa-expand"></i></button>
+        <button class="btn btn-light shadow btn-home d-none" onclick="showScreen('home')"><i class="fas fa-home text-success"></i></button>
+    </div>
+
+    <audio id="snd-benar" src="assets/benar.mp3"></audio>
+    <audio id="snd-salah" src="assets/salah.mp3"></audio>
+
+    <section id="home" class="screen active-screen animate__animated animate__fadeIn">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-5 ps-5">
+                    <div class="animate__animated animate__fadeInLeft">
+                        <button class="btn-menu" onclick="showScreen('tujuan')"><i class="fas fa-bullseye"></i> Tujuan</button>
+                        <button class="btn-menu" style="animation-delay: 0.1s" onclick="showScreen('materi')"><i class="fas fa-book-open"></i> Materi</button>
+                        <button class="btn-menu" style="animation-delay: 0.2s" onclick="showScreen('game')"><i class="fas fa-gamepad"></i> Game: Tebak Adab</button>
+                        <button class="btn-menu" style="animation-delay: 0.3s" onclick="showScreen('asesmen')"><i class="fas fa-spell-check"></i> Asesmen</button>
+                    </div>
+                </div>
+                <div class="col-md-7 text-end pe-5">
+                    <div class="glass-box animate__animated animate__fadeInRight">
+                        <h1 class="display-2 fw-bold text-success mb-0" style="font-family: 'Almendra';">Akhlak Mulia - Salam</h1>
+                        <h3 class="text-dark opacity-75">Pendidikan Agama Islam Kelas 4</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tujuan" class="screen">
+        <div class="content-box animate__animated animate__zoomIn">
+            <h2 class="text-center text-success border-bottom mb-4">Tujuan Pembelajaran</h2>
+            <ul class="fs-4">
+                <li>Menjelaskan arti salam sebagai simbol kedamaian.</li>
+                <li>Mengetahui ucapan dan jawaban salam yang lengkap.</li>
+                <li>Menerapkan urutan prioritas dalam memberi salam.</li>
+                <li>Membiasakan menyebarkan salam untuk menciptakan kerukunan.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="materi" class="screen">
+        <div class="content-box">
+            <div class="slide-materi active-slide">
+                <h3 class="text-success"><i class="fas fa-comments me-2"></i> Ayo Berpikir!</h3>
+                <p class="fs-4 mt-3">Apa yang kamu lakukan saat bertemu teman di jalan? Mengapa kita harus mengucapkan salam?</p>
+                <div class="p-4 bg-warning bg-opacity-10 border-start border-warning border-4 fs-4">
+                    "Memberi salam adalah perilaku terbaik dalam Islam." (H.R. Bukhari & Muslim)
+                </div>
+            </div>
+
+            <div class="slide-materi">
+                <h3 class="text-success">Adab 1: Yang Muda Ke Yang Tua</h3>
+                <p class="fs-4 mt-3">Sebagai bentuk penghormatan, orang yang lebih muda harus mendahului mengucapkan salam kepada yang lebih tua.</p>
+                <div class="text-center"><i class="fas fa-child fa-4x text-success me-4"></i> <i class="fas fa-arrow-right fa-2x text-muted"></i> <i class="fas fa-user-tie fa-5x text-success ms-4"></i></div>
+                <p class="alert alert-info mt-3">Contoh: Ahmad (Kelas 4) bertemu dengan Pak Guru, maka Ahmad mengucapkan salam terlebih dahulu.</p>
+            </div>
+
+            <div class="slide-materi">
+                <h3 class="text-success">Adab 2: Yang Berjalan Ke Yang Duduk</h3>
+                <p class="fs-4 mt-3">Orang yang sedang bergerak atau berjalan hendaknya menyapa orang yang sedang diam atau duduk.</p>
+                <p class="alert alert-info">Contoh: Kamu sedang berjalan melewati pos ronda yang ada orang sedang duduk, maka kamu yang memulai salam.</p>
+            </div>
+
+            <div class="slide-materi">
+                <h3 class="text-success">Adab 3: Kelompok Sedikit Ke Kelompok Banyak</h3>
+                <p class="fs-4 mt-3">Rombongan yang jumlahnya lebih sedikit harus memberikan salam kepada rombongan yang lebih banyak.</p>
+                <p class="alert alert-info">Contoh: Dua orang yang sedang berboncengan motor bertemu dengan sekumpulan orang di pinggir jalan, maka dua orang tersebut yang memulai salam.</p>
+            </div>
+
+            <div class="slide-materi">
+                <h3 class="text-success">Video Pembelajaran</h3>
+                <div class="ratio ratio-16x9 shadow rounded overflow-hidden">
+                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <div class="slide-materi">
+                <h3 class="text-success">Kesimpulan</h3>
+                <p class="fs-4">Mengucapkan salam hukumnya <strong>Sunnah</strong>, sedangkan menjawabnya adalah <strong>Wajib</strong>.</p>
+                <div class="p-3 bg-light border-radius-10">
+                    <p class="fs-5">"Jika kamu dihormati dengan salam, balaslah dengan yang lebih baik atau yang sepadan." (Q.S. An-Nisa: 86)</p>
+                </div>
+            </div>
+
+            <div class="slide-materi">
+                <h3 class="text-success">Refleksi Belajar</h3>
+                <p class="fs-4">Setelah mempelajari materi salam, mari kita renungkan:</p>
+                <ul class="fs-5">
+                    <li>Apakah aku sudah berani memulai salam kepada bapak/ibu guru?</li>
+                    <li>Bagaimana perasaanku ketika disapa dengan salam yang ramah?</li>
+                    <li>Maukah aku membantu menciptakan suasana damai dengan menyebarkan salam?</li>
+                </ul>
+                <div class="text-center mt-3"><i class="fas fa-heart text-danger animate__animated animate__heartBeat animate__infinite"></i></div>
+            </div>
+
+            <div class="inner-nav">
+                <button class="btn btn-outline-secondary px-4" onclick="navMateri(-1)"><i class="fas fa-arrow-left me-2"></i>Sebelumnya</button>
+                <button class="btn btn-success px-4" id="nextMatBtn" onclick="navMateri(1)">Selanjutnya <i class="fas fa-arrow-right ms-2"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <section id="game" class="screen">
+        <div class="content-box text-center">
+            <h2 class="text-success mb-4"><i class="fas fa-gamepad me-2"></i> Game: Tebak Adab Salam</h2>
+            <div id="game-container">
+                </div>
+        </div>
+    </section>
+
+    <section id="asesmen" class="screen">
+        <div class="content-box text-center" id="quiz-box">
+            </div>
+    </section>
+
+    <script>
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+            document.querySelector('.btn-home').classList.toggle('d-none', id === 'home');
+            if(id === 'asesmen') initQuiz();
+            if(id === 'game') initGame();
+        }
+
+        /* LOGIKA MATERI */
+        let currentMateri = 0;
+        const slides = document.querySelectorAll('.slide-materi');
+        function navMateri(dir) {
+            slides[currentMateri].classList.remove('active-slide');
+            currentMateri += dir;
+            if(currentMateri >= slides.length) { showScreen('home'); currentMateri = 0; }
+            if(currentMateri < 0) currentMateri = 0;
+            slides[currentMateri].classList.add('active-slide');
+            document.getElementById('nextMatBtn').innerHTML = currentMateri === slides.length - 1 ? 'Selesai <i class="fas fa-check ms-2"></i>' : 'Selanjutnya <i class="fas fa-arrow-right ms-2"></i>';
+        }
+
+        /* LOGIKA GAME: TEBAK ADAB */
+        const gameData = [
+            {q: "Siapa yang mendahului salam jika Siswa bertemu Guru?", a: "Siswa", b: "Guru", c: "Siswa"},
+            {q: "Jika rombongan 2 orang bertemu 10 orang, siapa yang menyapa dulu?", a: "2 Orang", b: "10 Orang", c: "2 Orang"},
+            {q: "Orang yang sedang naik sepeda bertemu orang duduk, siapa yang menyapa?", a: "Pesenam", b: "Pesepeda", c: "Pesepeda"}
+        ];
+        let gameIdx = 0;
+        function initGame() { gameIdx = 0; renderGame(); }
+        function renderGame() {
+            const container = document.getElementById('game-container');
+            if(gameIdx < gameData.length) {
+                const g = gameData[gameIdx];
+                container.innerHTML = `<p class="fs-3 mb-4">${g.q}</p>
+                    <button class="btn btn-warning btn-lg mx-2 px-5" onclick="checkGame('${g.a}', '${g.c}')">${g.a}</button>
+                    <button class="btn btn-success btn-lg mx-2 px-5" onclick="checkGame('${g.b}', '${g.c}')">${g.b}</button>`;
+            } else {
+                container.innerHTML = `<h3>Hebat! Kamu Paham Adab Salam!</h3><button class="btn btn-primary mt-3" onclick="showScreen('home')">Kembali</button>`;
+            }
+        }
+        function checkGame(val, correct) {
+            if(val === correct) { document.getElementById('snd-benar').play(); gameIdx++; renderGame(); }
+            else { document.getElementById('snd-salah').play(); alert("Ayo coba lagi!"); }
+        }
+
+        /* LOGIKA ASESMEN */
+        const bankSoal = [
+            {q: "Apa arti kata salam?", a: ["Perang", "Damai", "Benci", "Diam"], c: 1},
+            {q: "Hukum mengucapkan salam adalah...", a: ["Wajib", "Haram", "Sunnah", "Makruh"], c: 2},
+            {q: "Hukum menjawab salam adalah...", a: ["Wajib", "Sunnah", "Mubah", "Haram"], c: 0},
+            {q: "Surah An-Nisa ayat 86 menjelaskan tentang...", a: ["Adab Makan", "Kewajiban Menjawab Salam", "Cara Shalat", "Berbakti Orang Tua"], c: 1},
+            {q: "Yang muda mengucapkan salam kepada...", a: ["Yang Lebih Muda", "Yang Lebih Tua", "Yang Sebaya", "Tidak Perlu"], c: 1},
+            {q: "Yang berkendara memberi salam kepada...", a: ["Yang Berlari", "Yang Berjalan", "Yang Tidur", "Yang Makan"], c: 1},
+            {q: "Jika mendengar salam, kita wajib menjawabnya secara...", a: ["Sempurna/Lebih Baik", "Singkat saja", "Diam saja", "Biasa saja"], c: 0},
+            {q: "Menyebarkan salam dapat menumbuhkan...", a: ["Permusuhan", "Rasa Saling Mencintai", "Kesombongan", "Ketakutan"], c: 1},
+            {q: "Salam adalah doa untuk meminta ____ kepada Allah.", a: ["Kekayaan", "Keselamatan & Keberkahan", "Kepintaran", "Kekuatan"], c: 1},
+            {q: "Siapa teladan utama kita dalam memulai salam?", a: ["Artis", "Nabi Muhammad SAW", "Pahlawan", "Teman"], c: 1}
+        ];
+
+        let qIdx = 0, score = 0;
+        function initQuiz() { qIdx = 0; score = 0; renderQuiz(); }
+        
+        function renderQuiz() {
+            const box = document.getElementById('quiz-box');
+            if(qIdx < bankSoal.length) {
+                const s = bankSoal[qIdx];
+                box.innerHTML = `
+                    <h4 class="text-muted mb-3">Soal ${qIdx+1}/10</h4>
+                    <p class="fs-3 fw-bold mb-4">${s.q}</p>
+                    <div class="row g-3">
+                        ${s.a.map((opt, i) => `
+                            <div class="col-6">
+                                <button class="opt-btn btn-lg w-100 ans-${i}" id="opt-${i}" onclick="jawab(${i})">${opt}</button>
+                            </div>`).join('')}
+                    </div>`;
+            } else {
+                box.innerHTML = `<h2>Skor Akhir Kamu</h2><div class="display-1 fw-bold text-success my-4">${score * 10}</div><button class="btn btn-success btn-lg px-5" onclick="showScreen('home')">Main Lagi</button>`;
+            }
+        }
+
+        function jawab(i) {
+            const btns = document.querySelectorAll('.opt-btn');
+            const correctIdx = bankSoal[qIdx].c;
+            
+            // Disable all buttons so user can't click twice
+            btns.forEach(b => b.disabled = true);
+
+            if(i === correctIdx) {
+                document.getElementById('snd-benar').play();
+                document.getElementById(`opt-${i}`).classList.add('correct-ans'); // Hijau (Feedback)
+                score++;
+            } else {
+                document.getElementById('snd-salah').play();
+                document.getElementById(`opt-${i}`).classList.add('wrong-ans'); // Merah (Feedback)
+                document.getElementById(`opt-${correctIdx}`).classList.add('correct-ans'); // Tunjukkan jawaban yang benar
+            }
+            
+            setTimeout(() => {
+                qIdx++; renderQuiz();
+            }, 1200);
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+    </script>
+</body>
+</html>
