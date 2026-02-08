@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPI - Senang Menolong Orang Lain</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Limelight&family=Sour+Gummy&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <style>
+        :root {
+            --primary-pink: #FF69B4;
+            --secondary-purple: #9C27B0;
+            --light-pink: #FFB6C1;
+            --dark-purple: #4A148C;
+            --font-title: 'Limelight', cursive;
+            --font-body: 'Sour Gummy', cursive;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: var(--font-body);
+            overflow: hidden; /* Mencegah scroll pada body utama */
+            background-color: var(--light-pink);
+        }
+
+        h1, h2, h3, h4, h5, h6, .nav-title {
+            font-family: var(--font-title);
+            color: var(--dark-purple);
+        }
+
+        .mpi-container {
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        /* UI Controls */
+        .ui-controls {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-ui {
+            background-color: white;
+            color: var(--secondary-purple);
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: transform 0.2s, background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-ui:hover {
+            transform: scale(1.1);
+            background-color: var(--secondary-purple);
+            color: white;
+        }
+
+        /* Layout Management */
+        .page-section {
+            display: none !important;
+            height: 100%;
+            width: 100%;
+            padding: 80px 50px 40px 50px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .page-section.active {
+            display: block !important;
+        }
+
+        #home-page.active {
+            display: flex !important;
+            flex-direction: row;
+            padding: 0;
+        }
+
+        /* Content Box Styling */
+        .content-box {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 40px;
+            border: none; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1); 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .scrollable-content {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 10px;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--light-pink); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-pink); }
+
+        /* Home Page Styling - UPDATED to .jpeg */
+        #home-page {
+            background-image: url('assets/images/home.png');
+        }
+
+        .home-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+        }
+
+        .home-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .home-title {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            color: var(--dark-purple);
+        }
+        .home-subtitle {
+            font-size: 2rem;
+            color: var(--secondary-purple);
+        }
+
+        /* Menu Buttons Animation */
+        @keyframes floatPulse {
+            0% { transform: translateY(0px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+            50% { transform: translateY(-8px); box-shadow: 0 20px 30px rgba(0,0,0,0.15); }
+            100% { transform: translateY(0px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        }
+
+        .menu-btn {
+            width: 420px;
+            max-width: 90%;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-family: var(--font-title);
+            border-radius: 50px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            white-space: nowrap;
+            animation: floatPulse 4s ease-in-out infinite; 
+            transition: filter 0.3s;
+        }
+
+        .btn-tujuan { background: linear-gradient(45deg, #FF69B4, #FFB6C1); animation-delay: 0s; }
+        .btn-materi { background: linear-gradient(45deg, #9C27B0, #E040FB); animation-delay: 0.5s; }
+        .btn-game { background: linear-gradient(45deg, #FF4081, #F48FB1); animation-delay: 1s; }
+        .btn-asesmen { background: linear-gradient(45deg, #7B1FA2, #BA68C8); animation-delay: 1.5s; }
+
+        .menu-btn:hover {
+            filter: brightness(1.1);
+            animation-play-state: paused;
+        }
+
+        .menu-btn .material-icons {
+            font-size: 2.2rem;
+            background: rgba(255,255,255,0.25);
+            padding: 8px;
+            border-radius: 50%;
+        }
+
+        /* Materi Slider Styling */
+        .slide-container {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+        
+        .slide-container.active-slide {
+            display: flex;
+        }
+
+        .slide-content-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        .materi-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .btn-nav-materi {
+            background-color: var(--secondary-purple);
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-family: var(--font-title);
+            font-size: 1.2rem;
+            transition: 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-nav-materi:hover { background-color: var(--dark-purple); transform: translateY(-2px); }
+        .btn-nav-materi:disabled { background-color: #e0e0e0; color: #999; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .highlight-text {
+            background-color: rgba(255, 182, 193, 0.4);
+            padding: 5px 15px;
+            border-radius: 10px;
+            color: var(--dark-purple);
+            font-weight: bold;
+        }
+        
+        .quran-text {
+            font-family: 'Traditional Arabic', serif;
+            font-size: 2.5rem;
+            color: var(--dark-purple);
+            margin: 15px 0;
+            line-height: 1.4;
+        }
+
+        /* Image Analysis Grid */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+        .img-analysis-card {
+            border-radius: 15px;
+            overflow: hidden;
+            text-align: center;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .img-analysis-card:hover { transform: translateY(-5px); }
+        
+        .img-placeholder {
+            width: 100%;
+            height: 160px;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            background-color: #f5f5f5;
+        }
+        
+        .img-good .img-caption { background-color: #E8F5E9; color: #2E7D32; }
+        .img-bad .img-caption { background-color: #FFEBEE; color: #C62828; }
+        .img-caption { padding: 10px; font-weight: bold; font-size: 1rem; }
+
+        /* Game & Quiz Styling */
+        .game-option, .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 18px 25px;
+            margin: 10px 0;
+            background-color: white;
+            border: none;
+            border-left: 6px solid var(--secondary-purple);
+            border-radius: 10px;
+            font-size: 1.3rem;
+            text-align: left;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        .game-option:hover, .quiz-option:hover {
+            background-color: #F3E5F5;
+            transform: translateX(10px);
+            border-left-color: var(--primary-pink);
+        }
+        
+        .quiz-feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+        .feedback-correct { background-color: #C8E6C9; color: #1B5E20; }
+        .feedback-incorrect { background-color: #FFCDD2; color: #B71C1C; }
+
+    </style>
+</head>
+<body>
+
+<div class="mpi-container" id="mainContainer">
+
+    <div class="ui-controls">
+        <button class="btn-ui" id="btnFullscreen" title="Toggle Fullscreen">
+            <span class="material-icons">fullscreen</span>
+        </button>
+        <button class="btn-ui" id="btnHome" title="Kembali ke Home" style="display: none;">
+            <span class="material-icons">home</span>
+        </button>
+    </div>
+
+    <section id="home-page" class="page-section active animate__animated animate__fadeIn">
+        <div class="home-left animate__animated animate__slideInLeft">
+            <h1 class="home-title">Akhlak Mulia</h1>
+            <h2 class="home-title" style="color: var(--secondary-purple)">Senang Menolong Orang Lain</h2>
+            <h4 class="home-subtitle">Pendidikan Agama Islam Kelas 4</h4>
+        </div>
+        <div class="home-right animate__animated animate__slideInRight">
+            <button class="menu-btn btn-tujuan" onclick="showPage('tujuan-page')">
+                <span class="material-icons">school</span>
+                Tujuan Pembelajaran
+            </button>
+            <button class="menu-btn btn-materi" onclick="showPage('materi-page')">
+                <span class="material-icons">menu_book</span>
+                Materi Pembelajaran
+            </button>
+            <button class="menu-btn btn-game" onclick="showPage('game-page')">
+                <span class="material-icons">sports_esports</span>
+                Game Interaktif
+            </button>
+            <button class="menu-btn btn-asesmen" onclick="showPage('asesmen-page')">
+                <span class="material-icons">quiz</span>
+                Asesmen / Kuis
+            </button>
+        </div>
+    </section>
+
+    <section id="tujuan-page" class="page-section animate__animated animate__fadeInRight" style="background-image: url('assets/images/tujuan.png');">
+        <div class="container h-100">
+            <div class="content-box">
+                <h2 class="text-center mb-3" style="color: var(--secondary-purple);">
+                    <span class="material-icons" style="vertical-align: middle; font-size: 2.5rem;">school</span> 
+                    Tujuan Pembelajaran
+                </h2>
+                <div class="scrollable-content d-flex flex-column justify-content-center">
+                    <div class="p-4" style="background: rgba(243, 229, 245, 0.5); border-radius: 15px;">
+                        <ul style="font-size: 1.5rem; line-height: 2; list-style-type: none; margin: 0; padding: 0;">
+                            <li class="mb-2"><span class="material-icons text-success me-2" style="vertical-align: sub;">check_circle</span> Menjelaskan <strong>makna tolong-menolong</strong> dalam kebaikan.</li>
+                            <li class="mb-2"><span class="material-icons text-success me-2" style="vertical-align: sub;">check_circle</span> Menyebutkan <strong>dalil Al-Qur'an & Hadis</strong> tentang saling menolong.</li>
+                            <li class="mb-2"><span class="material-icons text-success me-2" style="vertical-align: sub;">check_circle</span> Membedakan tolong-menolong yang <strong>boleh</strong> dan <strong>dilarang</strong>.</li>
+                            <li class="mb-2"><span class="material-icons text-success me-2" style="vertical-align: sub;">check_circle</span> Menunjukkan sikap <strong>senang menolong</strong> dalam kehidupan sehari-hari.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="materi-page" class="page-section animate__animated animate__fadeInRight" style="background-image: url('assets/images/materi.png');">
+        <div class="container h-100">
+            <div class="content-box">
+                
+                <div class="slide-container active-slide animate__animated animate__fadeIn" id="slide-1">
+                    <div class="slide-content-wrapper">
+                        <h2 class="mb-4">Mari Berpikir Sejenak</h2>
+                        <div style="font-size: 1.6rem; max-width: 800px;">
+                            <p>Anak-anak hebat, pernahkah kalian melihat temanmu terjatuh dari sepeda?</p>
+                            <p>Atau melihat seorang nenek yang kesulitan menyeberang jalan?</p>
+                            <div class="highlight-text mt-4 d-inline-block">Apa yang HARUS kita lakukan saat melihat itu?</div>
+                            <p class="mt-4 text-muted">Apakah membiarkannya? Menertawakannya? Atau membantunya?</p>
+                        </div>                        
+                    </div>
+                </div>
+                
+                <div class="slide-container active-slide animate__animated animate__fadeIn" id="slide-2">
+                    <div class="slide-content-wrapper">
+                        <div class="ratio ratio-16x9" style="width: 70%; max-width: 600px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden;">
+                            <iframe src="https://www.youtube.com/embed/PsJtuDrHDp8?si=ls0CCwsggdVdY036" title="Video Pembelajaran" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>    
+
+                <div class="slide-container animate__animated animate__fadeIn" id="slide-3">
+                     <div class="slide-content-wrapper">
+                        <h2 class="mb-4">Indahnya Saling Menolong</h2>
+                        <div style="font-size: 1.4rem; line-height: 1.6; max-width: 900px;">
+                            <p>Kita hidup bertetangga dan bermasyarakat. Kita tidak bisa hidup sendiri. Maka, sudah seharusnya kita hidup <strong>saling menolong</strong>.</p>
+                            <p><strong>Rasulullah saw. adalah teladan kita.</strong> Beliau selalu membantu siapa saja yang membutuhkan, tanpa memandang agama atau suku.</p>
+                            <div class="alert mt-4" role="alert" style="background-color: #F3E5F5; border: none; border-left: 5px solid var(--secondary-purple); color: var(--dark-purple); text-align: left;">
+                                <div class="d-flex align-items-center">
+                                    <span class="material-icons me-3" style="font-size: 3rem;">lightbulb</span>
+                                    <div>
+                                        <strong>Kisah Teladan:</strong> Nabi pernah menjenguk anak tetangganya (seorang Yahudi) yang sedang sakit, padahal orang tua anak itu sangat membenci Nabi. Akhlak Nabi sangat mulia.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container animate__animated animate__fadeIn" id="slide-4">
+                     <div class="slide-content-wrapper">
+                        <h2 class="mb-2">Perintah Allah dalam Al-Qur'an</h2>
+                        
+                        <div class="quran-text">
+                            ۘ وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَىٰ ۖ وَلَا تَعَاوَنُوا عَلَى الْإِثْمِ وَالْعُدْوَانِ
+                        </div>
+                        <p class="fw-bold fs-4 mb-4">Q.S. Al-Maidah/5: 2</p>
+                        
+                        <div class="p-3 mb-3" style="background-color: #FFF8E1; border-radius: 10px; font-size: 1.3rem;">
+                            <strong>Artinya:</strong><br>
+                            “Dan tolong-menolonglah kamu dalam (mengerjakan) kebajikan dan takwa, dan jangan tolong-menolong dalam berbuat dosa dan permusuhan."
+                        </div>
+                        
+                        <div class="row w-100 mt-2">
+                            <div class="col-6">
+                                <div class="p-3 text-center" style="background: #E8F5E9; border-radius: 15px;">
+                                    <span class="material-icons text-success fs-1 mb-2">check_circle</span>
+                                    <h4 class="text-success">BOLEH</h4>
+                                    <p class="fs-6 mb-0">Menolong dalam kebaikan & takwa.</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                 <div class="p-3 text-center" style="background: #FFEBEE; border-radius: 15px;">
+                                    <span class="material-icons text-danger fs-1 mb-2">cancel</span>
+                                    <h4 class="text-danger">DILARANG</h4>
+                                    <p class="fs-6 mb-0">Menolong dalam dosa & permusuhan.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="slide-container animate__animated animate__fadeIn" id="slide-5">
+                     <div class="slide-content-wrapper">
+                        <h2 class="mb-3">Pesan Rasulullah saw.</h2>
+                        <div style="font-size: 1.2rem; width: 100%; max-width: 900px;">
+                            <blockquote class="blockquote p-3 mb-3" style="background: rgba(255,255,255,0.5); border-radius: 10px;">
+                                <p class="mb-0 fst-italic">"Wahai Aisyah! Jangan pernah menolak siapa pun yang membutuhkan sesuatu... Berikanlah sesuatu meskipun hanya separuh buah kurma..."</p>
+                            </blockquote>
+                            <div class="text-center mb-3">
+                                <p class="fw-bold fs-3 quran-text my-0">خَيْرُ النَّاسِ أَنْفَعُهُمْ لِلنَّاسِ</p>
+                                <p>"Sebaik-baik manusia adalah yang paling bermanfaat bagi orang lain." (H.R. Ahmad)</p>
+                            </div>
+                        </div>                        
+                    </div>
+                </div>
+
+                 <div class="slide-container animate__animated animate__fadeIn" id="slide-6">
+                     <div class="slide-content-wrapper">
+                        <h2 class="mb-3">Mari Amati Gambar</h2>
+                        <p class="fs-5 mb-4">Mana perilaku menolong yang BENAR dan mana yang SALAH?</p>
+                        
+                        <div class="image-grid">
+                            <div class="img-analysis-card img-good">
+                                <div class="img-placeholder" style="background-image: url('assets/images/analisis1.png');">
+                                    <span class="material-icons" style="font-size: 3rem;">healing</span>
+                                </div>
+                                <div class="img-caption">Menolong teman yang jatuh</div>
+                            </div>
+                            <div class="img-analysis-card img-bad">
+                                <div class="img-placeholder" style="background-image: url('assets/images/analisis2.png');">
+                                    <span class="material-icons" style="font-size: 3rem;">block</span>
+                                </div>
+                                <div class="img-caption">Menyontek Bersama (Curang)</div>
+                            </div>
+                             <div class="img-analysis-card img-good">
+                                <div class="img-placeholder" style="background-image: url('assets/images/analisis3.png');">
+                                    <span class="material-icons" style="font-size: 3rem;">flood</span>
+                                </div>
+                                <div class="img-caption">Menolong korban banjir</div>
+                            </div>
+                            <div class="img-analysis-card img-bad">
+                                <div class="img-placeholder" style="background-image: url('assets/images/analisis4.png');">
+                                    <span class="material-icons" style="font-size: 3rem;">record_voice_over</span>
+                                </div>
+                                <div class="img-caption">Sombong / Egois</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container animate__animated animate__fadeIn" id="slide-7">
+                     <div class="slide-content-wrapper">
+                        <h2 class="mb-4">Kesimpulan & Refleksi</h2>
+                        <div class="p-4 mb-4" style="background: rgba(156, 39, 176, 0.05); border-radius: 20px; font-size: 1.4rem; width: 100%; max-width: 800px; text-align: left;">
+                            <ul class="mb-0">
+                                <li class="mb-2">Menolong orang lain adalah <strong>akhlak mulia</strong>.</li>
+                                <li class="mb-2">Syarat menolong: <strong>Ikhlas</strong> dan dalam hal <strong>Kebaikan & Takwa</strong>.</li>
+                                <li class="mb-2">Larangan menolong: Dalam hal <strong>Dosa & Permusuhan</strong>.</li>
+                                <li class="mb-2">Jadilah orang yang <strong>bermanfaat</strong> bagi orang lain.</li>
+                            </ul>
+                        </div>
+                        <p class="highlight-text fs-4 mb-5">Sudahkah kamu menolong orang lain hari ini?</p>
+                        
+                        <button class="btn btn-lg btn-success" style="font-family: var(--font-title); border-radius: 50px; font-size: 1.4rem; padding: 15px 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);" onclick="showPage('game-page')">
+                            Lanjut ke Game Interaktif
+                        </button>
+                    </div>
+                </div>
+
+                <div class="materi-nav">
+                    <button class="btn-nav-materi" id="prevSlideBtn" onclick="changeSlide(-1)" disabled>Kembali</button>
+                    <span id="slideInfo" style="font-size: 1.2rem; align-self: center; font-weight: bold; color: var(--secondary-purple);">Slide 1 / 6</span>
+                    <button class="btn-nav-materi" id="nextSlideBtn" onclick="changeSlide(1)">Lanjut</button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="game-page" class="page-section animate__animated animate__fadeInRight" style="background-image: url('assets/images/game.png');">
+        <div class="container h-100">
+             <div class="content-box">
+                 <div class="scrollable-content d-flex flex-column justify-content-center">
+                    <h2 class="text-center mb-4"><span class="material-icons" style="font-size: 3rem; vertical-align: middle; color: var(--secondary-purple);">alt_route</span> Petualangan Kebaikan</h2>
+                    
+                    <div id="game-scenario-container" style="font-size: 1.5rem; padding: 20px; max-width: 900px; margin: 0 auto;">
+                        <h3 id="scenario-text" class="text-center mb-5 lh-base">Memuat skenario...</h3>
+                        <div id="scenario-options"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="asesmen-page" class="page-section animate__animated animate__fadeInRight" style="background-image: url('assets/images/asesmen.jpg');">
+         <div class="container h-100">
+             <div class="content-box">
+                <h2 class="text-center mb-3"><span class="material-icons" style="font-size: 2.5rem; vertical-align: middle; color: var(--secondary-purple);">quiz</span> Kuis Reflektif</h2>
+                
+                <div id="quiz-container" class="scrollable-content d-flex flex-column justify-content-center">
+                    
+                    <div id="question-area" style="display: none; max-width: 900px; margin: 0 auto; width: 100%;">
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="badge" style="font-size: 1.2rem; background-color: var(--secondary-purple);">Soal <span id="q-number">1</span> / 10</span>
+                            <span class="badge" style="font-size: 1.2rem; background-color: var(--primary-pink);">Skor: <span id="q-score">0</span></span>
+                        </div>
+                        <h3 id="question-text" class="mb-4 text-center" style="font-size: 1.6rem; line-height: 1.5;">Pertanyaan...</h3>
+                        <div id="quiz-options-container"></div>
+                        <div id="quiz-feedback" class="quiz-feedback animate__animated animate__fadeIn" style="display: none;"></div>
+                         <button id="btn-next-question" class="btn btn-primary btn-lg w-100 mt-4" style="display: none; font-family: var(--font-title); border-radius: 15px; font-size: 1.4rem;" onclick="nextQuestion()">Soal Selanjutnya</button>
+                    </div>
+
+                    <div id="quiz-start" class="text-center my-auto">
+                         <span class="material-icons mb-3" style="font-size: 5rem; color: var(--dark-purple);">school</span>
+                         <h3 class="mb-4">Siap menguji pemahamanmu?</h3>
+                         <p style="font-size: 1.4rem;" class="text-muted">Ada 10 pertanyaan. Kerjakan dengan jujur ya!</p>
+                         <button class="btn btn-lg btn-success mt-4" style="font-family: var(--font-title); border-radius: 30px; padding: 15px 50px; font-size: 1.4rem;" onclick="startQuiz()">Mulai Kuis</button>
+                     </div>
+
+                    <div id="quiz-result" class="text-center my-auto animate__animated animate__zoomIn" style="display: none;">
+                        <h2 class="mb-4">Kuis Selesai</h2>
+                        <p style="font-size: 1.5rem;">Nilai Akhir Kamu:</p>
+                        <h1 id="final-score" style="font-size: 6rem; color: var(--primary-pink); font-family: var(--font-body);">0</h1>
+                        <p id="final-message" style="font-size: 1.5rem; font-weight: bold; color: var(--secondary-purple); margin-bottom: 30px;"></p>
+                        
+                        <div class="d-flex justify-content-center gap-3">
+                            <button class="btn btn-lg btn-warning" style="font-family: var(--font-title); border-radius: 30px; min-width: 180px;" onclick="resetQuiz()">Ulangi</button>
+                            <button class="btn btn-lg btn-secondary" style="font-family: var(--font-title); border-radius: 30px; min-width: 180px;" onclick="showPage('home-page')">Home</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // --- Global Variables & Audio ---
+    const benarAudio = new Audio('assets/audio/benar.mp3');
+    const salahAudio = new Audio('assets/audio/salah.mp3');
+    let currentSlide = 1;
+    const totalSlides = 7;
+
+    // --- Navigation Functions ---
+    function showPage(pageId) {
+        // 1. Sembunyikan semua halaman
+        document.querySelectorAll('.page-section').forEach(page => {
+            page.classList.remove('active', 'animate__fadeInRight', 'animate__fadeIn');
+            
+            if(page.id === 'home-page') {
+                 const leftPart = page.querySelector('.home-left');
+                 const rightPart = page.querySelector('.home-right');
+                 if(leftPart) leftPart.classList.remove('animate__slideInLeft');
+                 if(rightPart) rightPart.classList.remove('animate__slideInRight');
+            }
+        });
+
+        // 2. Tampilkan halaman target
+        const targetPage = document.getElementById(pageId);
+        if(targetPage) {
+            targetPage.classList.add('active');
+
+            // 3. Animasi
+            if (pageId === 'home-page') {
+                targetPage.classList.add('animate__fadeIn');
+                targetPage.querySelector('.home-left').classList.add('animate__slideInLeft');
+                targetPage.querySelector('.home-right').classList.add('animate__slideInRight');
+                document.getElementById('btnHome').style.display = 'none'; 
+                // Tidak perlu me-reset background image di sini karena CSS sudah menangani per-section
+            } else {
+                targetPage.classList.add('animate__fadeInRight');
+                document.getElementById('btnHome').style.display = 'flex'; 
+            }
+
+            if (pageId === 'materi-page') resetMateriSlider();
+            if (pageId === 'game-page') startGameScenario();
+        }
+    }
+
+    document.getElementById('btnHome').addEventListener('click', () => showPage('home-page'));
+
+    // --- Fullscreen Toggle ---
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    btnFullscreen.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(err);
+            });
+            btnFullscreen.innerHTML = '<span class="material-icons">fullscreen_exit</span>';
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+                btnFullscreen.innerHTML = '<span class="material-icons">fullscreen</span>';
+            }
+        }
+    });
+
+
+    // --- Materi Slider Logic ---
+    function resetMateriSlider() {
+        currentSlide = 1;
+        updateSlideView();
+    }
+
+    function changeSlide(direction) {
+        currentSlide += direction;
+        updateSlideView();
+    }
+
+    function updateSlideView() {
+        document.querySelectorAll('.slide-container').forEach(slide => {
+            slide.classList.remove('active-slide', 'animate__fadeIn');
+        });
+
+        const activeSlide = document.getElementById(`slide-${currentSlide}`);
+        if(activeSlide) {
+            activeSlide.classList.add('active-slide', 'animate__fadeIn');
+            document.getElementById('slideInfo').textContent = `Slide ${currentSlide} / ${totalSlides}`;
+        }
+
+        document.getElementById('prevSlideBtn').disabled = (currentSlide === 1);
+        document.getElementById('nextSlideBtn').disabled = (currentSlide === totalSlides);
+    }
+
+
+    // --- Game Logic (Branching Scenario) ---
+    const gameData = {
+        start: {
+            text: "Kamu sedang berjalan pulang sekolah. Di depanmu, seorang adik kelas menjatuhkan kotak bekalnya dan isinya tumpah berantakan. Dia terlihat mau menangis. Apa yang kamu lakukan?",
+            options: [
+                { text: "Segera menghampirinya dan membantu membereskan tumpahan makanannya.", next: "good_1" },
+                { text: "Pura-pura tidak melihat dan terus berjalan cepat agar cepat sampai rumah.", next: "bad_1" }
+            ]
+        },
+        good_1: {
+            text: "Wah, hebat! Adik kelas itu berhenti menangis dan mengucapkan terima kasih. Kamu merasa senang telah membantunya. <br><br>Melanjutkan perjalanan, kamu melihat ada dahan pohon yang cukup besar menghalangi jalan setapak.",
+            options: [
+                { text: "Berusaha memindahkan dahan itu ke pinggir agar tidak mencelakakan orang lain.", next: "good_final" },
+                { text: "Melangkahi dahan itu saja, toh aku masih bisa lewat.", next: "neutral_final" }
+            ]
+        },
+        bad_1: {
+            text: "Kamu terus berjalan. Tapi hatimu merasa tidak tenang karena membiarkan adik kelas itu kesusahan. <br><br>Di perempatan, kamu melihat temanmu sedang kesulitan mengerjakan PR Matematika di teras rumahnya.",
+            options: [
+                { text: "Menawarkan bantuan untuk mengajarinya cara mengerjakan soal itu.", next: "redeem_final" },
+                { text: "Mengajaknya bermain game online saja daripada pusing mengerjakan PR.", next: "bad_final" }
+            ]
+        },
+        good_final: {
+            text: "<strong>Luar Biasa!</strong><br>Hari ini kamu telah mengamalkan Q.S. Al-Maidah ayat 2 dengan menolong dalam kebaikan. Kamu membantu adik kelas dan menyingkirkan gangguan di jalan. Ini adalah akhlak yang sangat mulia.",
+            options: [], isFinal: true
+        },
+        neutral_final: {
+            text: "<strong>Cukup Baik.</strong><br>Kamu telah membantu adik kelas tadi, itu bagus. Namun, sayang sekali kamu membiarkan dahan pohon di jalan. Ingat, menyingkirkan gangguan dari jalan juga termasuk sedekah.",
+            options: [], isFinal: true
+        },
+        redeem_final: {
+            text: "<strong>Bagus!</strong><br>Meskipun tadi kamu sempat mengabaikan adik kelas, kamu memperbaiki kesalahanmu dengan membantu teman belajar. Ini adalah bentuk tolong-menolong dalam kebaikan.",
+            options: [], isFinal: true
+        },
+        bad_final: {
+            text: "<strong>Yah, Sayang Sekali.</strong><br>Hari ini kamu melewatkan kesempatan untuk berbuat baik. Kamu mengabaikan adik kelas dan malah mengajak teman menunda kewajibannya. Yuk, perbaiki sikap kita besok!",
+            options: [], isFinal: true
+        }
+    };
+
+    function startGameScenario() {
+        renderScenarioNode('start');
+    }
+
+    function renderScenarioNode(nodeId) {
+        const node = gameData[nodeId];
+        const textContainer = document.getElementById('scenario-text');
+        const optionsContainer = document.getElementById('scenario-options');
+        
+        textContainer.classList.remove('animate__fadeIn');
+        void textContainer.offsetWidth; 
+        textContainer.innerHTML = node.text;
+        textContainer.classList.add('animate__animated', 'animate__fadeIn');
+
+        optionsContainer.innerHTML = '';
+        
+        if (node.isFinal) {
+            const finishBtn = document.createElement('button');
+            finishBtn.className = 'btn btn-lg btn-primary mt-4 animate__animated animate__fadeInUp';
+            finishBtn.style.borderRadius = '30px';
+            finishBtn.style.fontFamily = 'var(--font-title)';
+            finishBtn.innerHTML = "Selesai & Lanjut ke Asesmen";
+            finishBtn.onclick = () => showPage('asesmen-page');
+            optionsContainer.appendChild(finishBtn);
+        } else {
+            node.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'game-option animate__animated animate__fadeInUp';
+                btn.style.animationDelay = `${index * 0.2}s`;
+                btn.innerText = option.text;
+                btn.onclick = () => renderScenarioNode(option.next);
+                optionsContainer.appendChild(btn);
+            });
+        }
+    }
+
+
+    // --- Asesmen (Quiz) Logic ---
+    const quizQuestions = [
+        { q: "Sikap yang seharusnya kita lakukan jika melihat orang lain membutuhkan pertolongan adalah...", options: ["Membiarkannya", "Menertawakannya", "Menolongnya dengan ikhlas", "Memfoto lalu pergi"], answer: 2 },
+        { q: "Allah Swt. memerintahkan kita untuk tolong-menolong dalam hal...", options: ["Kebaikan dan Takwa", "Dosa dan Permusuhan", "Kecurangan saat ujian", "Mengganggu teman"], answer: 0 },
+        { q: "Perhatikan Q.S. Al-Maidah/5: 2. Potongan ayat 'Walaa ta’aawanuu ‘alal itsmi wal ‘udwaan' artinya jangan tolong menolong dalam...", options: ["Kebaikan dan ketakwaan", "Berbuat dosa dan permusuhan", "Membangun masjid", "Belajar kelompok"], answer: 1 },
+        { q: "Berikut ini yang TERMASUK contoh menolong dalam kebaikan adalah...", options: ["Memberi jawaban saat ulangan kepada teman", "Membantu ibu merapikan tempat tidur", "Ikut teman berkelahi membela kelompok", "Menyembunyikan sepatu teman agar dia bingung"], answer: 1 },
+        { q: "Rasulullah saw. memberikan teladan dengan menjenguk anak tetangganya yang sakit, padahal tetangga itu...", options: ["Adalah saudaranya", "Sangat menyayangi Nabi", "Berbeda agama dan membenci Nabi", "Orang kaya raya"], answer: 2 },
+        { q: "Manfaat dari sikap saling menolong di masyarakat adalah...", options: ["Tercipta permusuhan", "Hidup menjadi rukun dan damai", "Menambah musuh", "Membuat orang lain iri"], answer: 1 },
+        { q: "Hadis Nabi berbunyi 'Khoirunnas anfa'uhum linnas', artinya sebaik-baik manusia adalah yang paling...", options: ["Kaya hartanya", "Tinggi jabatannya", "Bermanfaat bagi orang lain", "Kuat tenaganya"], answer: 2 },
+        { q: "Jika kita menolong orang lain, seharusnya kita mengharapkan balasan dari...", options: ["Orang yang ditolong", "Teman-teman", "Guru di sekolah", "Allah Swt. semata"], answer: 3 },
+        { q: "Andi melihat Budi sedang membuang sampah sembarangan ke sungai. Sikap Andi yang benar sebagai wujud tolong-menolong dalam kebaikan adalah...", options: ["Ikut membuang sampah ke sungai", "Membiarkan saja karena takut dimarahi", "Menasihati Budi dengan baik agar tidak membuang sampah ke sungai", "Melaporkan Budi ke polisi"], answer: 2 },
+        { q: "Menolong teman tidak boleh dilakukan dalam hal yang...", options: ["Membuatnya senang", "Meringankan bebannya", "Melanggar aturan Allah dan sekolah", "Membuatnya tersenyum"], answer: 2 }
+    ];
+
+    let currentQuizIndex = 0;
+    let quizScore = 0;
+    let isAnswering = false;
+
+    function startQuiz() {
+        currentQuizIndex = 0;
+        quizScore = 0;
+        document.getElementById('quiz-start').style.display = 'none';
+        document.getElementById('quiz-result').style.display = 'none';
+        document.getElementById('question-area').style.display = 'block';
+        loadQuestion();
+    }
+
+    function resetQuiz() {
+        startQuiz();
+    }
+
+    function loadQuestion() {
+        isAnswering = false;
+        const qData = quizQuestions[currentQuizIndex];
+        
+        document.getElementById('q-number').innerText = currentQuizIndex + 1;
+        document.getElementById('q-score').innerText = quizScore;
+        document.getElementById('question-text').innerText = qData.q;
+        
+        const optionsCont = document.getElementById('quiz-options-container');
+        optionsCont.innerHTML = '';
+        document.getElementById('quiz-feedback').style.display = 'none';
+        document.getElementById('btn-next-question').style.display = 'none';
+
+        qData.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-option animate__animated animate__fadeInUp';
+            btn.style.animationDelay = `${index * 0.1}s`;
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(index, btn);
+            optionsCont.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIndex, selectedBtn) {
+        if(isAnswering) return;
+        isAnswering = true;
+
+        const correctIndex = quizQuestions[currentQuizIndex].answer;
+        const feedbackDiv = document.getElementById('quiz-feedback');
+        const allOptions = document.querySelectorAll('.quiz-option');
+
+        allOptions.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === correctIndex) {
+            benarAudio.play();
+            selectedBtn.style.backgroundColor = '#C8E6C9';
+            selectedBtn.style.borderLeftColor = '#2E7D32';
+            feedbackDiv.innerHTML = "✅ Benar Sekali!";
+            feedbackDiv.className = "quiz-feedback feedback-correct animate__animated animate__bounceIn";
+            quizScore += 10;
+        } else {
+            salahAudio.play();
+            selectedBtn.style.backgroundColor = '#FFCDD2';
+            selectedBtn.style.borderLeftColor = '#C62828';
+            allOptions[correctIndex].style.backgroundColor = '#C8E6C9';
+            allOptions[correctIndex].style.borderLeftColor = '#2E7D32';
+            feedbackDiv.innerHTML = "❌ Kurang Tepat.";
+            feedbackDiv.className = "quiz-feedback feedback-incorrect animate__animated animate__shakeX";
+        }
+
+        document.getElementById('q-score').innerText = quizScore;
+        feedbackDiv.style.display = 'block';
+        document.getElementById('btn-next-question').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentQuizIndex++;
+        if (currentQuizIndex < quizQuestions.length) {
+            loadQuestion();
+        } else {
+            showQuizResult();
+        }
+    }
+
+    function showQuizResult() {
+        document.getElementById('question-area').style.display = 'none';
+        const resultDiv = document.getElementById('quiz-result');
+        resultDiv.style.display = 'block';
+        
+        document.getElementById('final-score').innerText = quizScore;
+        const finalMessage = document.getElementById('final-message');
+        
+        if (quizScore >= 80) {
+             finalMessage.innerText = "Masya Allah! Luar biasa, kamu memahami materi dengan sangat baik!";
+        } else if (quizScore >= 60) {
+             finalMessage.innerText = "Alhamdulillah, cukup baik. Yuk pelajari lagi materinya.";
+        } else {
+             finalMessage.innerText = "Jangan patah semangat! Ayo baca lagi materinya.";
+        }
+    }
+
+</script>
+</body>
+</html>
